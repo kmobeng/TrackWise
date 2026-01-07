@@ -1,0 +1,168 @@
+const logger = require("../config/logger.config");
+const {
+  createCategoryService,
+  getAllCategoriesService,
+  updateCategoryService,
+  deleteCategoryService,
+  getSingleCategoryService,
+} = require("../services/category.service");
+const { createError } = require("../utils/expense.util");
+
+exports.createCategory = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    user = req.user._id;
+    if (!name || !user) {
+      throw createError(400, "Please provide name and user");
+    }
+    logger.info("creating category", { name, user });
+    const category = await createCategoryService(name, user);
+    logger.info("category created", {
+      id: category._id,
+      name: name,
+      user: category.user,
+    });
+    res.status(201).json({ status: "success", data: { category } });
+  } catch (error) {
+    if (error.code === 11000) {
+      return next(
+        createError(400, "You already have a category with this name")
+      );
+    }
+    logger.error("Error while creating category", {
+      error: error.message,
+      stack: error.stack,
+      categoryName: req.body.name,
+    });
+    next(error);
+  }
+};
+
+exports.getAllCategories = async (req, res, next) => {
+  try {
+    logger.info("Fetching all categories", {
+      user: req.user._id,
+      email: req.user.email,
+    });
+    const categories = await getAllCategoriesService(req.user._id, req.query);
+    logger.info("Categories fetched", {
+      user: req.user._id,
+      email: req.user.email,
+    });
+    res.status(200).json({
+      status: "success",
+      results: categories.length,
+      data: { categories },
+    });
+  } catch (error) {
+    logger.error("Error while fetching all categories", {
+      error: error.message,
+      stack: error.stack,
+      email: req.user.email,
+      userId: req.user._id,
+    });
+    next(error);
+  }
+};
+
+exports.getSingleCategory = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { categoryId } = req.params;
+    if (!categoryId) {
+      throw createError(400, "No ID provided");
+    }
+    logger.info("Fetching single category", {
+      category: categoryId,
+      user: userId,
+      email: req.user.email,
+    });
+    const category = await getSingleCategoryService(categoryId, userId);
+    logger.info("Single category fetched", {
+      category: categoryId,
+      user: userId,
+      email: req.user.email,
+    });
+    res.status(200).json({ status: "success", data: { category } });
+  } catch (error) {
+    logger.error("Error while fetching category", {
+      error: error.message,
+      stack: error.stack,
+      categoryId: req.params.categoryId,
+      email: req.user.email,
+      userId: req.user._id,
+    });
+    next(error);
+  }
+};
+
+exports.updateCategory = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      throw createError(400, "No name provided");
+    }
+    const { categoryId } = req.params;
+    if (!categoryId) {
+      throw createError(400, "No ID provided");
+    }
+    logger.info("Attempt to update the category", {
+      name: name,
+      email: req.user.email,
+      userId: req.user._id,
+      categoryId,
+    });
+    const category = await updateCategoryService(
+      categoryId,
+      req.user._id,
+      name
+    );
+    logger.info("Category updated", {
+      name: name,
+      email: req.user.email,
+      id: req.user._id,
+      categoryId,
+    });
+    res.status(200).json({ status: "success", data: { category } });
+  } catch (error) {
+    logger.error("Error while updating the category", {
+      error: error.message,
+      stack: error.stack,
+      category: req.params?.categoryId,
+      email: req.user.email,
+      userId: req.user._id,
+    });
+    next(error);
+  }
+};
+
+exports.deleteCategory = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const { categoryId } = req.params;
+    if (!categoryId) {
+      throw createError(400, "No ID provided");
+    }
+    logger.info("Attempt to delete category", {
+      categoryId,
+      userId,
+      email: req.user.email,
+    });
+    const category = await deleteCategoryService(categoryId, userId);
+    logger.info("Category deleted", {
+      categoryId,
+      userId,
+      email: req.user._id,
+    });
+    res.status(200).json({ status: "success" });
+  } catch (error) {
+    logger.error("Error while deleting the category", {
+      error: error.message,
+      stack: error.stack,
+      category: req.params?.categoryId,
+      email: req.user.email,
+      userId: req.user._id,
+    });
+    next(error);
+  }
+};
