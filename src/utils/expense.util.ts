@@ -1,5 +1,5 @@
-function createError(statusCode, errorMessage) {
+function createError(statusCode:number, errorMessage:string) {
   return { statusCode, errorMessage };
 }
 
-module.exports = { createError };
+export default createError

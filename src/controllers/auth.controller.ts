@@ -1,11 +1,12 @@
-const logger = require("../config/logger.config");
-const { signupService, loginService } = require("../services/auth.service");
-const { createError } = require("../utils/expense.util");
-const { promisify } = require("util");
-const jwt = require("jsonwebtoken");
-const User = require("../model/user.model");
+import { Response,Request,NextFunction } from "express";
+import logger from "../config/logger.config";
+import { loginService, signupService } from "../services/auth.service";
+import createError from "../utils/expense.util";
+import { promisify } from "util";
+import jwt from "jsonwebtoken"
+import User from "../model/user.model";
 
-exports.signup = async (req, res, next) => {
+exports.signup = async (req:Request, res:Response, next:NextFunction):Promise<void> => {
   try {
     const { name, email, password, passwordConfirm } = req.body;
 
@@ -22,7 +23,7 @@ exports.signup = async (req, res, next) => {
     const token = user.signToken();
 
     res.status(201).json({ status: "success", token, data: user });
-  } catch (error) {
+  } catch (error:any) {
     logger.error("Signup error", {
       error: error.message,
       stack: error.stack,
@@ -33,7 +34,7 @@ exports.signup = async (req, res, next) => {
   }
 };
 
-exports.login = async (req, res, next) => {
+exports.login = async (req:Request, res:Response, next:NextFunction):Promise<void> => {
   try {
     const { email, password } = req.body;
     logger.info("Login attempt", { email });
@@ -49,7 +50,7 @@ exports.login = async (req, res, next) => {
       email: user.email,
     });
     res.status(200).json({ status: "success", token, data: user });
-  } catch (error) {
+  } catch (error:any) {
     logger.error("Login error", {
       error: error.message,
       stack: error.stack,
@@ -59,7 +60,7 @@ exports.login = async (req, res, next) => {
   }
 };
 
-exports.protect = async (req, res, next) => {
+exports.protect = async (req:Request, res:Response, next:NextFunction):Promise<void> => {
   try {
     let token;
     if (
@@ -74,7 +75,7 @@ exports.protect = async (req, res, next) => {
       throw createError(401, "You are not logged in. Please log in");
     }
 
-    const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+    const decoded = await promisify(jwt.verify as any)(token, process.env.JWT_SECRET);
 
     const currentUser = await User.findById(decoded.id);
     if (!currentUser) {

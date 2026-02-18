@@ -2,7 +2,7 @@ const User = require("../model/user.model");
 const { createError } = require("../utils/expense.util");
 const bcrypt = require("bcrypt");
 
-exports.signupService = async (name, email, password, passwordConfirm) => {
+export const signupService = async (name:string, email:string, password:string, passwordConfirm:string) => {
   try {
     const user = await User.create({ name, email, password, passwordConfirm });
 
@@ -16,7 +16,7 @@ exports.signupService = async (name, email, password, passwordConfirm) => {
   }
 };
 
-exports.loginService = async (email, password) => {
+export const loginService = async (email:string, password:string) => {
   try {
     const user = await User.findOne({ email }).select("+password");
     if (!user || !(await bcrypt.compare(password, user.password))) {
