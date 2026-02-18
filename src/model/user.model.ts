@@ -1,7 +1,13 @@
-import mongoose from "mongoose";
+import mongoose, { InferSchemaType, model } from "mongoose";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
+
+export interface IUserMethods {
+  signToken(): string;
+  comparePassword(candidatePassword: string): Promise<boolean>;
+  changedPasswordAfter(JWTTimestamp: number): boolean;
+}
 
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: [true, "Name is required"] },
@@ -64,6 +70,10 @@ UserSchema.methods.changedPasswordAfter = function (jwtTimestamp:any) {
   return false;
 };
 
-const User =  mongoose.model("User", UserSchema);
+export type IUser = InferSchemaType<typeof UserSchema> &
+  IUserMethods &
+  Document;
+
+const User = model<IUser>("User", UserSchema);
 
 export default User

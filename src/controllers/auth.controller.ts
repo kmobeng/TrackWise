@@ -1,10 +1,18 @@
-import { Response,Request,NextFunction } from "express";
+import { Response,Request,NextFunction, request } from "express";
 import logger from "../config/logger.config";
 import { loginService, signupService } from "../services/auth.service";
 import createError from "../utils/expense.util";
 import { promisify } from "util";
 import jwt from "jsonwebtoken"
-import User from "../model/user.model";
+import User, { IUser } from "../model/user.model";
+
+declare global {
+  namespace Express {
+    interface Request {
+      user: IUser;
+    }
+  }
+}
 
 exports.signup = async (req:Request, res:Response, next:NextFunction):Promise<void> => {
   try {
@@ -92,7 +100,7 @@ exports.protect = async (req:Request, res:Response, next:NextFunction):Promise<v
 
     req.user = currentUser;
     next();
-  } catch (error) {
+  } catch (error:any) {
     logger.error("Unauthorized route", { error: error.message });
     next(error);
   }
