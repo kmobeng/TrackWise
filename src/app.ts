@@ -1,10 +1,7 @@
-const express = require("express");
-const morgan = require("morgan");
-const expenseRoutes = require("./router/expense.route");
-const { errorHandler } = require("./middleware/expense.middleware");
-const userRoute = require("./router/user.route");
-const categoryRoutes = require("./router/category.route");
-const qs = require("qs");
+import express from "express"
+import morgan from "morgan";
+
+
 
 const app = express();
 
@@ -16,4 +13,4 @@ app.use("/api/users", userRoute);
 app.use("/api/category", categoryRoutes);
 app.use(errorHandler);
 
-module.exports = app;
+export default app

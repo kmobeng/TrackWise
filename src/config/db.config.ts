@@ -1,11 +1,11 @@
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-const logger = require("./logger.config");
+import mongoose from "mongoose";
+import dotenv from "dotenv"
+import logger from "./logger.config";
 dotenv.config();
 
 async function connectDB() {
   try {
-    await mongoose.connect(process.env.DB_URL);
+    await mongoose.connect(process.env.DB_URL!);
     logger.info("Database connected successfully");
   } catch (error) {
     logger.error("Error while connecting database", error);
@@ -13,4 +13,4 @@ async function connectDB() {
   }
 }
 
-module.exports = { connectDB };
+export default connectDB

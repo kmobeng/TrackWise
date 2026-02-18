@@ -1,7 +1,8 @@
-const app = require("./app");
-const dotenv = require("dotenv");
-const { connectDB } = require("./config/db.config");
-const logger = require("./config/logger.config");
+import dotenv from "dotenv"
+import app from "./app";
+import connectDB from "./config/db.config";
+import logger from "./config/logger.config";
+
 
 dotenv.config();
 
