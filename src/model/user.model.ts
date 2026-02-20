@@ -1,4 +1,4 @@
-import mongoose, { InferSchemaType, model } from "mongoose";
+import mongoose, { InferSchemaType, model ,Document} from "mongoose";
 import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
