@@ -1,4 +1,5 @@
 import Category from "../model/category.model"
+import createError from "../utils/expense.util";
 
 export const createCategoryService = async (name:string, user:string) => {
   try {

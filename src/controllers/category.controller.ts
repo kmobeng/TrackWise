@@ -21,7 +21,7 @@ exports.createCategory = async (req:Request, res:Response, next:NextFunction) =>
       throw createError(400, "Please provide name and user");
     }
     logger.info("creating category", { name, user });
-    const category = await createCategoryService(name, user);
+    const category = await createCategoryService(name, user.toString());
     logger.info("category created", {
       id: category._id,
       name: name,
