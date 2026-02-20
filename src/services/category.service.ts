@@ -1,9 +1,6 @@
-const Category = require("../model/category.model");
-const APIFeatures = require("../utils/ApiFeatures.utils");
-const { createError } = require("../utils/expense.util");
-const mongoose = require("mongoose");
+import Category from "../model/category.model"
 
-exports.createCategoryService = async (name, user) => {
+export const createCategoryService = async (name:string, user:string) => {
   try {
     const category = await Category.create({ name, user });
     if (!category) {

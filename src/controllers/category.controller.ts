@@ -1,17 +1,22 @@
-const logger = require("../config/logger.config");
-const {
-  createCategoryService,
-  getAllCategoriesService,
-  updateCategoryService,
-  deleteCategoryService,
-  getSingleCategoryService,
-} = require("../services/category.service");
-const { createError } = require("../utils/expense.util");
+import { Request,Response,NextFunction   } from "express";
+import { IUser } from "../model/user.model";
+import createError from "../utils/expense.util";
+import logger from "../config/logger.config";
+import { createCategoryService } from "../services/category.service";
 
-exports.createCategory = async (req, res, next) => {
+
+declare global {
+  namespace Express {
+    interface Request {
+      user: IUser;
+    }
+  }
+}
+
+exports.createCategory = async (req:Request, res:Response, next:NextFunction) => {
   try {
     const { name } = req.body;
-    user = req.user._id;
+    const user = req.user._id;
     if (!name || !user) {
       throw createError(400, "Please provide name and user");
     }
@@ -23,7 +28,7 @@ exports.createCategory = async (req, res, next) => {
       user: category.user,
     });
     res.status(201).json({ status: "success", data: { category } });
-  } catch (error) {
+  } catch (error:any) {
     if (error.code === 11000) {
       return next(
         createError(400, "You already have a category with this name")
