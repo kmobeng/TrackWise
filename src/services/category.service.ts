@@ -31,7 +31,7 @@ export const getAllCategoriesService = async (id:string, queryString:any): Promi
   }
 };
 
-exports.getSingleCategoryService = async (id:string, userId:string) => {
+export const getSingleCategoryService = async (id:string, userId:string) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw createError(400, "Invlaid ID");
@@ -43,7 +43,7 @@ exports.getSingleCategoryService = async (id:string, userId:string) => {
   }
 };
 
-exports.updateCategoryService = async (id:string, userId:string, name:string) => {
+export const updateCategoryService = async (id:string, userId:string, name:string) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw createError(400, "Invalid ID");
@@ -72,7 +72,7 @@ exports.updateCategoryService = async (id:string, userId:string, name:string) =>
   }
 };
 
-exports.deleteCategoryService = async (id:string, userId:string) => {
+export const deleteCategoryService = async (id:string, userId:string) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw createError(400, "Invalid ID");

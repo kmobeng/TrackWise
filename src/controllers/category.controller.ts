@@ -2,7 +2,7 @@ import { Request,Response,NextFunction   } from "express";
 import { IUser } from "../model/user.model";
 import createError from "../utils/expense.util";
 import logger from "../config/logger.config";
-import { createCategoryService, getAllCategoriesService } from "../services/category.service";
+import { createCategoryService, deleteCategoryService, getAllCategoriesService, getSingleCategoryService, updateCategoryService } from "../services/category.service";
 
 
 declare global {
@@ -49,7 +49,7 @@ exports.getAllCategories = async (req:Request, res:Response, next:NextFunction) 
       user: req.user._id,
       email: req.user.email,
     });
-    const categories = await getAllCategoriesService(req.user._id, req.query);
+    const categories = await getAllCategoriesService(req.user._id.toString(), req.query);
     logger.info("Categories fetched", {
       user: req.user._id,
       email: req.user.email,
@@ -70,7 +70,7 @@ exports.getAllCategories = async (req:Request, res:Response, next:NextFunction) 
   }
 };
 
-exports.getSingleCategory = async (req, res, next) => {
+exports.getSingleCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user._id;
     const { categoryId } = req.params;
@@ -82,14 +82,14 @@ exports.getSingleCategory = async (req, res, next) => {
       user: userId,
       email: req.user.email,
     });
-    const category = await getSingleCategoryService(categoryId, userId);
+    const category = await getSingleCategoryService(categoryId.toString(), userId.toString());
     logger.info("Single category fetched", {
       category: categoryId,
       user: userId,
       email: req.user.email,
     });
     res.status(200).json({ status: "success", data: { category } });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Error while fetching category", {
       error: error.message,
       stack: error.stack,
@@ -101,7 +101,7 @@ exports.getSingleCategory = async (req, res, next) => {
   }
 };
 
-exports.updateCategory = async (req, res, next) => {
+exports.updateCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name } = req.body;
     if (!name) {
@@ -118,8 +118,8 @@ exports.updateCategory = async (req, res, next) => {
       categoryId,
     });
     const category = await updateCategoryService(
-      categoryId,
-      req.user._id,
+      categoryId.toString(),
+      req.user._id.toString(),
       name
     );
     logger.info("Category updated", {
@@ -129,7 +129,7 @@ exports.updateCategory = async (req, res, next) => {
       categoryId,
     });
     res.status(200).json({ status: "success", data: { category } });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Error while updating the category", {
       error: error.message,
       stack: error.stack,
@@ -141,7 +141,7 @@ exports.updateCategory = async (req, res, next) => {
   }
 };
 
-exports.deleteCategory = async (req, res, next) => {
+exports.deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user._id;
     const { categoryId } = req.params;
@@ -153,14 +153,14 @@ exports.deleteCategory = async (req, res, next) => {
       userId,
       email: req.user.email,
     });
-    const category = await deleteCategoryService(categoryId, userId);
+    const category = await deleteCategoryService(categoryId.toString(), userId.toString());
     logger.info("Category deleted", {
       categoryId,
       userId,
       email: req.user._id,
     });
     res.status(200).json({ status: "success" });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Error while deleting the category", {
       error: error.message,
       stack: error.stack,
