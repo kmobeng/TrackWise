@@ -1,4 +1,6 @@
+import mongoose from "mongoose";
 import Category from "../model/category.model"
+import APIFeatures from "../utils/ApiFeatures.utils";
 import createError from "../utils/expense.util";
 
 export const createCategoryService = async (name:string, user:string) => {
@@ -13,7 +15,7 @@ export const createCategoryService = async (name:string, user:string) => {
   }
 };
 
-exports.getAllCategoriesService = async (id, queryString) => {
+export const getAllCategoriesService = async (id:string, queryString:string) => {
   try {
     const features = new APIFeatures(Category.find({ user: id }), queryString)
       .filter()
@@ -29,7 +31,7 @@ exports.getAllCategoriesService = async (id, queryString) => {
   }
 };
 
-exports.getSingleCategoryService = async (id, userId) => {
+exports.getSingleCategoryService = async (id:string, userId:string) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw createError(400, "Invlaid ID");
@@ -41,7 +43,7 @@ exports.getSingleCategoryService = async (id, userId) => {
   }
 };
 
-exports.updateCategoryService = async (id, userId, name) => {
+exports.updateCategoryService = async (id:string, userId:string, name:string) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw createError(400, "Invalid ID");
@@ -70,7 +72,7 @@ exports.updateCategoryService = async (id, userId, name) => {
   }
 };
 
-exports.deleteCategoryService = async (id, userId) => {
+exports.deleteCategoryService = async (id:string, userId:string) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw createError(400, "Invalid ID");

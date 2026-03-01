@@ -2,7 +2,7 @@ import { Request,Response,NextFunction   } from "express";
 import { IUser } from "../model/user.model";
 import createError from "../utils/expense.util";
 import logger from "../config/logger.config";
-import { createCategoryService } from "../services/category.service";
+import { createCategoryService, getAllCategoriesService } from "../services/category.service";
 
 
 declare global {
@@ -43,7 +43,7 @@ exports.createCategory = async (req:Request, res:Response, next:NextFunction) =>
   }
 };
 
-exports.getAllCategories = async (req, res, next) => {
+exports.getAllCategories = async (req:Request, res:Response, next:NextFunction) => {
   try {
     logger.info("Fetching all categories", {
       user: req.user._id,
@@ -59,7 +59,7 @@ exports.getAllCategories = async (req, res, next) => {
       results: categories.length,
       data: { categories },
     });
-  } catch (error) {
+  } catch (error:any) {
     logger.error("Error while fetching all categories", {
       error: error.message,
       stack: error.stack,
