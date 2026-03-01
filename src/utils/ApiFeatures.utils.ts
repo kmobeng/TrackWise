@@ -1,5 +1,23 @@
+interface Query {
+  find: (obj: any) => Query;
+  sort: (sortBy: string) => Query;
+  skip: (skip: number) => Query;
+  limit: (limit: number) => Query;
+}
+
+interface QueryString {
+  [key: string]: any;
+  page?: number | string;
+  sort?: string;
+  limit?: number | string;
+  date?: string | { gte: Date; lte: Date };
+}
+
 class APIFeatures {
-  constructor(query, queryString) {
+  query: Query;
+  queryString: QueryString;
+
+  constructor(query: Query, queryString: QueryString) {
     this.query = query;
     this.queryString = queryString;
   }
@@ -39,8 +57,8 @@ class APIFeatures {
   }
 
   paginate() {
-    const page = this.queryString.page * 1 || 1;
-    const limit = this.queryString.limit * 1 || 10;
+    const page = Number(this.queryString.page ?? 1) || 1;
+    const limit = Number(this.queryString.limit ?? 10) || 10;
     const skip = (page - 1) * limit;
     this.query = this.query.skip(skip).limit(limit);
     return this;
