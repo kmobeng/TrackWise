@@ -15,7 +15,7 @@ export const createCategoryService = async (name:string, user:string) => {
   }
 };
 
-export const getAllCategoriesService = async (id:string, queryString:string) => {
+export const getAllCategoriesService = async (id:string, queryString:any): Promise<any> => {
   try {
     const features = new APIFeatures(Category.find({ user: id }), queryString)
       .filter()
