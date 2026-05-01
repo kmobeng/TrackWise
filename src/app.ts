@@ -1,11 +1,11 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
-import morgan from "morgan";
+import httpLogger from "./config/httpLogger.config";
 
 const app: Application = express();
 
 app.use(cors());
-app.use(morgan("dev"));
+app.use(httpLogger);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true , limit: "50kb"}));
 
