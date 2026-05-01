@@ -43,10 +43,14 @@ export const protect = async (
       throw createError("User does not exist", 404);
     }
 
-    if (currentUser.passwordChangeAt) {
-      if (decoded.iat < currentUser.passwordChangeAt.getTime() / 1000) {
-        throw createError("Password recently changed. Please login again", 401);
-      }
+    console.log("currentUser.passwordChangedAt", currentUser.passwordChangedAt);
+
+    // check if user changed password after the token was issued
+    if (
+      currentUser.passwordChangedAt &&
+      decoded.iat < currentUser.passwordChangedAt.getTime() / 1000
+    ) {
+      throw createError("Password recently changed. Please login again", 401);
     }
 
     // attach current user to req.user

@@ -24,12 +24,23 @@ model User {
   password  String
   role      Role?     @default(USER)
   refreshTokens RefreshToken[]
-  passwordChangeAt DateTime?
+  passwordResetToken PasswordResetToken?
+  passwordChangedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expiresAt DateTime
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PasswordResetToken {
   id        String   @id @default(uuid())
   token     String   @unique
   expiresAt DateTime
