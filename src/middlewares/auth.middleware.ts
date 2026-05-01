@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { createError } from "../utils/error.util";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
+import logger from "../config/winston.config";
 
 // definig jwt payload
 interface JWTPayload {
@@ -26,16 +27,7 @@ export const protect = async (
 ) => {
   try {
     let token: any;
-    // get bearer token from req.headers
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
-    }else{
-        token = req.cookies.accessToken
-    }
-
+    token = req.cookies.accessToken;
     if (!token) {
       throw createError("You are not logged in. Please login to continue", 401);
     }
@@ -46,6 +38,7 @@ export const protect = async (
     const currentUser = await prisma.user.findUnique({
       where: { id: decoded.id },
     });
+
     if (!currentUser) {
       throw createError("User does not exist", 404);
     }

@@ -3,7 +3,12 @@ import { loginSchema, signUpSchema } from "../validators/auth.validator";
 import { createError } from "../utils/error.util";
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt";
-import { loginService, refreshTokenService, signUpService } from "../services/auth.service";
+import {
+  loginService,
+  logoutService,
+  refreshTokenService,
+  signUpService,
+} from "../services/auth.service";
 import {
   generateRefreshToken,
   generateToken,
@@ -44,7 +49,7 @@ export const signUp = async (
 
     const newUser = await signUpService(name, email, hashedPassword);
 
-    const token = generateToken(newUser.id, req, res);
+    generateToken(newUser.id, req, res);
 
     const { refreshToken, hashedRefreshToken } = generateRefreshToken();
 
@@ -59,7 +64,7 @@ export const signUp = async (
     sendToken(req, res, refreshToken);
 
     const { password: _, ...user } = newUser;
-    res.status(201).json({ status: "success", token, data: user });
+    res.status(201).json({ status: "success", data: user });
   } catch (error) {
     next(error);
   }
@@ -83,35 +88,84 @@ export const login = async (
 
     const user = await loginService(email, password);
 
-    const token = generateToken(user.id, req, res);
+  generateToken(user.id, req, res);
 
     const { refreshToken, hashedRefreshToken } = generateRefreshToken();
-    await prisma.refreshToken.update({
+    await prisma.refreshToken.upsert({
       where: { userId: user.id },
-      data: { token: hashedRefreshToken, expiresAt },
-    })
+      update: { token: hashedRefreshToken, expiresAt },
+      create: { token: hashedRefreshToken, userId: user.id, expiresAt },
+    });
 
     sendToken(req, res, refreshToken);
 
     const { password: _, ...userData } = user;
-    res.status(200).json({ status: "success", token, data: userData });
-    
+    res.status(200).json({ status: "success",  data: userData });
   } catch (error) {
     next(error);
   }
 };
 
-export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+export const refreshToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
       throw createError("No refresh token provided", 401);
     }
-    const hashedRefreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
+    const hashedRefreshToken = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
 
-    const token = await refreshTokenService(hashedRefreshToken,req,res,expiresAt);
+    await refreshTokenService(
+      hashedRefreshToken,
+      req,
+      res,
+      expiresAt,
+    );
 
-    res.status(200).json({ status: "success", token });
+    res.status(200).json({ status: "success" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const logout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      throw createError("No refresh token provided", 401);
+    }
+    const hashedRefreshToken = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+
+    await logoutService(hashedRefreshToken);
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res
+      .status(200)
+      .json({ status: "success", message: "Logged out successfully" });
   } catch (error) {
     next(error);
   }
