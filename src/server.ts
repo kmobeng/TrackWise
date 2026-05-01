@@ -1,7 +1,8 @@
-import app from "./app";
 import dotenv from "dotenv";
-import logger from "./config/winston.config";
 dotenv.config();
+import app from "./app";
+import logger from "./config/winston.config";
+
 
 const port = process.env.PORT || 3000;
 
