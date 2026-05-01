@@ -43,8 +43,6 @@ export const protect = async (
       throw createError("User does not exist", 404);
     }
 
-    console.log("currentUser.passwordChangedAt", currentUser.passwordChangedAt);
-
     // check if user changed password after the token was issued
     if (
       currentUser.passwordChangedAt &&
