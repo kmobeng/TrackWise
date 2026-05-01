@@ -3,12 +3,13 @@ import { loginSchema, signUpSchema } from "../validators/auth.validator";
 import { createError } from "../utils/error.util";
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt";
-import { loginService, signUpService } from "../services/auth.service";
+import { loginService, refreshTokenService, signUpService } from "../services/auth.service";
 import {
   generateRefreshToken,
   generateToken,
   sendToken,
 } from "../utils/auth.util";
+import crypto from "crypto";
 
 const expiresAt = new Date(
   Date.now() +
@@ -95,6 +96,22 @@ export const login = async (
     const { password: _, ...userData } = user;
     res.status(200).json({ status: "success", token, data: userData });
     
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      throw createError("No refresh token provided", 401);
+    }
+    const hashedRefreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
+
+    const token = await refreshTokenService(hashedRefreshToken,req,res,expiresAt);
+
+    res.status(200).json({ status: "success", token });
   } catch (error) {
     next(error);
   }

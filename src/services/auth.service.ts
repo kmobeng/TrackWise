@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt"
 import { createError } from "../utils/error.util";
+import { generateRefreshToken, generateToken, sendToken } from "../utils/auth.util";
 
 export const signUpService = async (name: string, email: string, password: string) => {
     try {
@@ -26,6 +27,33 @@ export const loginService = async ( email:string, password: string)=>{
         }
 
         return user
+    } catch (error) {
+        throw error
+    }
+}
+
+export const refreshTokenService = async (hashedRefreshToken: string,req:any, res: any,expiresAt: Date) => {
+    try {
+        const storedToken = await prisma.refreshToken.findUnique({
+      where: { token: hashedRefreshToken},
+      include: { user: true },
+    }); 
+
+    if (!storedToken || storedToken.expiresAt < new Date()) {
+      throw createError("Invalid or expired refresh token", 401);
+    }
+
+    const newAccessToken = generateToken(storedToken.userId, req, res);
+
+    const { refreshToken: newRefreshToken, hashedRefreshToken: newHashedRefreshToken } = generateRefreshToken();
+    await prisma.refreshToken.update({
+      where: { userId: storedToken.userId },
+      data: { token: newHashedRefreshToken, expiresAt },
+    });
+
+    sendToken(req, res, newRefreshToken);
+
+    return newAccessToken;
     } catch (error) {
         throw error
     }

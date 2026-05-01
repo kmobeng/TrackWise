@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import cookieSession from "cookie-session";
 import authRouter from "./routes/auth.route";
 import httpLogger from "./config/httpLogger.config";
+import { protect } from "./middlewares/auth.middleware";
 const app: Application = express();
 
 app.use(cors());
@@ -20,7 +21,7 @@ app.use(
   }),
 );
 
-app.get("/", (req: Request, res: Response) => {
+app.get("/",protect, (req: Request, res: Response) => {
     res.json({ message: "API is running" });
 }); 
 
