@@ -9,8 +9,11 @@ import {
   generateToken,
   sendToken,
 } from "../utils/auth.util";
-import crypto from "crypto";
-import { setRefreshTokenCookieOptions } from "../utils/auth.util";
+
+const expiresAt = new Date(
+  Date.now() +
+    Number(process.env.REFRESH_JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000,
+);
 
 export const signUp = async (
   req: Request,
@@ -43,11 +46,6 @@ export const signUp = async (
     const token = generateToken(newUser.id, req, res);
 
     const { refreshToken, hashedRefreshToken } = generateRefreshToken();
-
-    const expiresAt = new Date(
-      Date.now() +
-        Number(process.env.REFRESH_JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000,
-    );
 
     await prisma.refreshToken.create({
       data: {
@@ -83,6 +81,20 @@ export const login = async (
     const { email, password } = parsed.data;
 
     const user = await loginService(email, password);
+
+    const token = generateToken(user.id, req, res);
+
+    const { refreshToken, hashedRefreshToken } = generateRefreshToken();
+    await prisma.refreshToken.update({
+      where: { userId: user.id },
+      data: { token: hashedRefreshToken, expiresAt },
+    })
+
+    sendToken(req, res, refreshToken);
+
+    const { password: _, ...userData } = user;
+    res.status(200).json({ status: "success", token, data: userData });
+    
   } catch (error) {
     next(error);
   }
