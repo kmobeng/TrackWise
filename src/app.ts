@@ -1,16 +1,16 @@
-import express from "express"
+import express, { Application, Request, Response } from "express";
+import cors from "cors";
 import morgan from "morgan";
 
+const app: Application = express();
 
-
-const app = express();
-
-app.set("query parser", "extended");
+app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
-app.use("/api/expense", expenseRoutes);
-app.use("/api/users", userRoute);
-app.use("/api/category", categoryRoutes);
-app.use(errorHandler);
+app.use(express.urlencoded({ extended: true , limit: "50kb"}));
 
-export default app
+app.get("/", (req: Request, res: Response) => {
+    res.json({ message: "API is running" });
+});
+
+export default app;
