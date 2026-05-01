@@ -42,20 +42,19 @@ export const generateToken = (
   id: string,
   req: Request,
   res: Response,
-): string => {
+): void => {
   const token = jwt.sign({ id }, process.env.JWT_SECRET!, {
     expiresIn: process.env.JWT_EXPIRES_IN!,
   } as SignOptions);
   const accessTokenCookieOptions = setAccessTokenCookieOptions();
   res.cookie("accessToken", token, accessTokenCookieOptions);
-  return token as string;
 };
 
 export const sendToken = (
   req: Request,
   res: Response,
   refreshToken: string,
-) => {
+): void => {
   const refreshTokenCookieOptions = setRefreshTokenCookieOptions();
 
   res.cookie("refreshToken", refreshToken, refreshTokenCookieOptions);
