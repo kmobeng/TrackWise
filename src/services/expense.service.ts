@@ -1,4 +1,3 @@
-import { th } from "zod/locales";
 import { prisma } from "../lib/prisma";
 import { createError } from "../utils/error.util";
 

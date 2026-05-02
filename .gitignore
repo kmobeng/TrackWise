@@ -3,3 +3,4 @@ dist
 logs
 node_modules
 /src/generated
+features.txt
