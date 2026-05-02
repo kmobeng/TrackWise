@@ -23,6 +23,9 @@ model User {
   email     String   @unique
   password  String
   role      Role?     @default(USER)
+  expenses  Expense[]
+  budgets   Budget[]
+  categories Category[]
   refreshTokens RefreshToken[]
   passwordResetToken PasswordResetToken?
   passwordChangedAt DateTime?
@@ -34,7 +37,7 @@ model RefreshToken {
   id        String   @id @default(uuid())
   token     String   @unique
   expiresAt DateTime
-  userId    String   @unique
+  userId    String   
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -48,4 +51,53 @@ model PasswordResetToken {
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Expense{
+  id          String   @id @default(uuid())
+  amount      Float
+  description String?
+  date        DateTime
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  isDefault   Boolean  @default(false)
+  expenses    Expense[]
+  categoryBudgets CategoryBudget[]
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Budget {
+  id          String   @id @default(uuid())
+  amount      Float
+ monthYear DateTime
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  categoryBudgets CategoryBudget[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, monthYear])
+}
+
+model CategoryBudget {
+  id          String   @id @default(uuid())
+  amount      Float
+ budgetId    String
+  budget      Budget   @relation(fields: [budgetId], references: [id])
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
