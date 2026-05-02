@@ -23,6 +23,7 @@ import {
 import crypto from "crypto";
 import sendEmail from "../utils/email.util";
 import logger from "../config/winston.config";
+import { success } from "zod";
 
 const expiresAt = new Date(
   Date.now() +
@@ -72,7 +73,7 @@ export const signUp = async (
     sendToken(req, res, refreshToken);
 
     const { password: _, ...user } = newUser;
-    res.status(201).json({ status: "success", data: user });
+    res.status(201).json({ success: true, data: user });
   } catch (error) {
     next(error);
   }
@@ -99,16 +100,18 @@ export const login = async (
     generateToken(user.id, req, res);
 
     const { refreshToken, hashedRefreshToken } = generateRefreshToken();
-    await prisma.refreshToken.upsert({
-      where: { userId: user.id },
-      update: { token: hashedRefreshToken, expiresAt },
-      create: { token: hashedRefreshToken, userId: user.id, expiresAt },
+    await prisma.refreshToken.create({
+      data: {
+        token: hashedRefreshToken,
+        userId: user.id,
+        expiresAt,
+      },
     });
 
     sendToken(req, res, refreshToken);
 
     const { password: _, ...userData } = user;
-    res.status(200).json({ status: "success", data: userData });
+    res.status(200).json({ success: true, data: userData });
   } catch (error) {
     next(error);
   }
@@ -131,7 +134,7 @@ export const refreshToken = async (
 
     await refreshTokenService(hashedRefreshToken, req, res, expiresAt);
 
-    res.status(200).json({ status: "success" });
+    res.status(200).json({ success: true });
   } catch (error) {
     next(error);
   }
@@ -166,9 +169,7 @@ export const logout = async (
       sameSite: "strict",
     });
 
-    res
-      .status(200)
-      .json({ status: "success", message: "Logged out successfully" });
+    res.status(200).json({ success: true, message: "Logged out successfully" });
   } catch (error) {
     next(error);
   }
@@ -234,7 +235,7 @@ export const forgotPasswoerd = async (
     }
 
     res.status(200).json({
-      status: "success",
+      success: true,
       message: "Password reset link sent to email",
     });
   } catch (error) {
@@ -290,7 +291,7 @@ export const resetPassword = async (
 
     res
       .status(200)
-      .json({ status: "success", message: "Password reset successful" });
+      .json({ success: true, message: "Password reset successful" });
   } catch (error) {
     next(error);
   }

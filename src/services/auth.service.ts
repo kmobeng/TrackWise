@@ -56,20 +56,19 @@ export const refreshTokenService = async (
       throw createError("Invalid or expired refresh token", 401);
     }
 
-     generateToken(storedToken.userId, req, res);
+    generateToken(storedToken.userId, req, res);
 
     const {
       refreshToken: newRefreshToken,
       hashedRefreshToken: newHashedRefreshToken,
     } = generateRefreshToken();
-    
+
     await prisma.refreshToken.update({
-      where: { userId: storedToken.userId },
+      where: { token: hashedRefreshToken },
       data: { token: newHashedRefreshToken, expiresAt },
     });
 
     sendToken(req, res, newRefreshToken);
-
   } catch (error) {
     throw error;
   }
@@ -80,7 +79,6 @@ export const logoutService = async (hashedRefreshToken: string) => {
     await prisma.refreshToken.delete({
       where: { token: hashedRefreshToken },
     });
-    
   } catch (error) {
     throw error;
   }
