@@ -1,0 +1,11 @@
+import { Router } from "express";
+import { createExpense } from "../controllers/expense.controller";
+import app from "../app";
+import { protect } from "../middlewares/auth.middleware";
+
+const expenseRouter = Router();
+expenseRouter.use(protect); // Apply authentication middleware to all routes in this router
+
+expenseRouter.post("/", createExpense);
+
+export default expenseRouter;

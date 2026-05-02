@@ -7,6 +7,7 @@ import authRouter from "./routes/auth.route";
 import httpLogger from "./config/httpLogger.config";
 import { protect } from "./middlewares/auth.middleware";
 import { apiLimiter } from "./middlewares/limiter.middleware";
+import expenseRouter from "./routes/expense.route";
 
 const app: Application = express();
 
@@ -30,6 +31,7 @@ app.get("/", protect, (req: Request, res: Response) => {
 });
 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/expenses", expenseRouter);
 
 app.use(errorHandler);
 export default app;
