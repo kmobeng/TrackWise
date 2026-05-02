@@ -1,11 +1,16 @@
 import { Request, Response, NextFunction } from "express";
-import { createExpenseSchema } from "../validators/expense.validator";
+import {
+  createExpenseSchema,
+  updateExpenseSchema,
+} from "../validators/expense.validator";
 import { createError } from "../utils/error.util";
 import { prisma } from "../lib/prisma";
 import {
   createExpenseService,
+  deleteExpenseService,
   getExpensesService,
   getSingleExpenseService,
+  updateExpenseService,
 } from "../services/expense.service";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import { toCedis, toPesewas } from "../utils/convertAmount.util";
@@ -102,6 +107,66 @@ export const getSingleExpense = async (
     res.status(200).json({
       success: true,
       data: expense,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateExpense = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    if (!req.params.expenseId) {
+      throw createError("Expense ID is required", 400);
+    }
+    const parsed = updateExpenseSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues
+        .map((err: any) => err.message)
+        .join(", ");
+      throw createError(errorMessages, 400);
+    }
+
+    const expense = await updateExpenseService(
+      req.params.expenseId.toString(),
+      req.user!.id,
+      parsed.data.amount ? toPesewas(parsed.data.amount) : undefined,
+      parsed.data.description,
+      parsed.data.date ? new Date(parsed.data.date) : undefined,
+      parsed.data.categoryId,
+    );
+
+    expense.amount = toCedis(expense.amount);
+
+    res.status(200).json({
+      success: true,
+      data: expense,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteExpense = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    if (!req.params.expenseId) {
+      throw createError("Expense ID is required", 400);
+    }
+
+    const expense = await deleteExpenseService(
+      req.params.expenseId.toString(),
+      req.user!.id,
+    );
+
+    res.status(200).json({
+      success: true,
     });
   } catch (error) {
     next(error);

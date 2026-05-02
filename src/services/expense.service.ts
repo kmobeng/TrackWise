@@ -58,3 +58,49 @@ export const getSingleExpenseService = async (
     throw error;
   }
 };
+
+export const updateExpenseService = async (
+  expenseId: string,
+  userId: string,
+  amount?: number,
+  description?: string,
+  date?: Date,
+  categoryId?: string,
+) => {
+  try {
+    const expense = await prisma.expense.update({
+      where: { id: expenseId, userId },
+      data: {
+        ...(amount !== undefined && { amount }),
+        ...(description !== undefined && { description }),
+        ...(date !== undefined && { date }),
+        ...(categoryId !== undefined && { categoryId }),
+      },
+    });
+
+    if (!expense) {
+      throw createError("Expense not found", 404);
+    }
+    return expense;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteExpenseService = async (
+  expenseId: string,
+  userId: string,
+) => {
+  try {
+    const expense = await prisma.expense.delete({
+      where: { id: expenseId, userId },
+    });
+
+    if (!expense) {
+      throw createError("Expense not found", 404);
+    }
+    return expense;
+  } catch (error) {
+    throw error;
+  }
+};

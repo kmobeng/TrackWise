@@ -6,5 +6,7 @@ export const createExpenseSchema = z.object({
   date: z.coerce
     .date()
     .max(new Date(), { message: "Date cannot be in the future" }),
-  categoryId: z.string().optional(),
+  categoryId: z.uuid({error: "Invalid category Id"}).optional(),
 });
+
+export const updateExpenseSchema = createExpenseSchema.partial();
