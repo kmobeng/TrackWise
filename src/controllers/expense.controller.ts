@@ -5,6 +5,7 @@ import { prisma } from "../lib/prisma";
 import {
   createExpenseService,
   getExpensesService,
+  getSingleExpenseService,
 } from "../services/expense.service";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import { toCedis, toPesewas } from "../utils/convertAmount.util";
@@ -76,6 +77,31 @@ export const getExpenses = async (
       success: true,
       result: formattedExpenses.length,
       data: formattedExpenses,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSingleExpense = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.user!.id;
+    const expenseId = req.params.expenseId;
+    if (!expenseId) {
+      throw createError("Expense ID is required", 400);
+    }
+
+    const expense = await getSingleExpenseService(expenseId.toString(), userId);
+
+    expense.amount = toCedis(expense.amount);
+
+    res.status(200).json({
+      success: true,
+      data: expense,
     });
   } catch (error) {
     next(error);

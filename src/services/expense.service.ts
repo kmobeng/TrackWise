@@ -33,9 +33,27 @@ export const getExpensesService = async (userId: string) => {
     });
 
     if (expenses.length == 0) {
-        throw createError("No expenses found",404);
+      throw createError("No expenses found", 404);
     }
     return expenses;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getSingleExpenseService = async (
+  expenseId: string,
+  userId: string,
+) => {
+  try {
+    const expense = await prisma.expense.findFirst({
+      where: { id: expenseId, userId },
+    });
+
+    if (!expense) {
+      throw createError("Expense not found", 404);
+    }
+    return expense;
   } catch (error) {
     throw error;
   }
