@@ -26,7 +26,7 @@ app.use(
 
 app.use(apiLimiter); // apply rate limiter to all requests
 
-app.get("/", protect, (req: Request, res: Response) => {
+app.get("/", (req: Request, res: Response) => {
   res.json({ message: "API is running" });
 });
 
