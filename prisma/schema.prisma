@@ -79,25 +79,24 @@ model Category {
 }
 
 model Budget {
-  id          String   @id @default(uuid())
-  amount      Float
- monthYear DateTime
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  id              String           @id @default(uuid())
+  amount          Int
+  userId          String           @unique
+  user            User             @relation(fields: [userId], references: [id])
   categoryBudgets CategoryBudget[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([userId, monthYear])
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }
 
 model CategoryBudget {
-  id          String   @id @default(uuid())
-  amount      Float
- budgetId    String
-  budget      Budget   @relation(fields: [budgetId], references: [id])
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  amount     Int
+  budgetId   String
+  budget     Budget   @relation(fields: [budgetId], references: [id])
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([budgetId, categoryId])
 }
