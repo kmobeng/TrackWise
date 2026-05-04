@@ -11,7 +11,7 @@ import {
 import { AuthRequest } from "../middlewares/auth.middleware";
 import { ca } from "zod/locales";
 
-export const createCategory = (
+export const createCategory = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
@@ -27,7 +27,7 @@ export const createCategory = (
 
     const { name } = parsed.data;
 
-    const category = createCategoryService(name, req.user!.id);
+    const category = await createCategoryService(name, req.user!.id);
 
     res.status(201).json({
       success: true,
@@ -38,17 +38,18 @@ export const createCategory = (
   }
 };
 
-export const getAllCategories = (
+export const getAllCategories = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
 ) => {
   try {
     const userId = req.user!.id;
-    const categories = getAllCategoriesService(userId);
+    const categories = await getAllCategoriesService(userId);
 
     res.status(200).json({
       success: true,
+      result: categories.length,
       data: categories,
     });
   } catch (error) {
@@ -56,7 +57,7 @@ export const getAllCategories = (
   }
 };
 
-export const getSingleCategory = (
+export const getSingleCategory = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
@@ -67,7 +68,7 @@ export const getSingleCategory = (
       throw createError("Category ID is required", 400);
     }
 
-    const category = getSingleCategoryService(
+    const category = await getSingleCategoryService(
       categoryId.toString(),
       req.user!.id,
     );
@@ -81,7 +82,7 @@ export const getSingleCategory = (
   }
 };
 
-export const updateCategory = (
+export const updateCategory = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
@@ -101,7 +102,7 @@ export const updateCategory = (
 
     const { name } = parsed.data;
 
-    const category = updateCategoryService(
+    const category = await updateCategoryService(
       categoryId.toString(),
       name,
       req.user!.id,
@@ -116,7 +117,7 @@ export const updateCategory = (
   }
 };
 
-export const deleteCategory = (
+export const deleteCategory = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
@@ -127,10 +128,14 @@ export const deleteCategory = (
       throw createError("Category ID is required", 400);
     }
 
-    const category = deleteCategoryService(
+    const category = await deleteCategoryService(
       categoryId.toString(),
       req.user!.id,
     );
+
+    res.status(200).json({
+      success: true,
+    });
   } catch (error) {
     next(error);
   }

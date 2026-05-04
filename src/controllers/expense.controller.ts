@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import {
   createExpenseSchema,
+  monthlyExpenseSummarySchema,
   updateExpenseSchema,
 } from "../validators/expense.validator";
 import { createError } from "../utils/error.util";
@@ -10,10 +11,12 @@ import {
   deleteExpenseService,
   getExpensesService,
   getSingleExpenseService,
+  monthlyExpenseSummaryService,
   updateExpenseService,
 } from "../services/expense.service";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import { toCedis, toPesewas } from "../utils/convertAmount.util";
+import { ca } from "zod/locales";
 
 export const createExpense = async (
   req: AuthRequest,
@@ -172,3 +175,33 @@ export const deleteExpense = async (
     next(error);
   }
 };
+
+export const monthlyExpenseSummary = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const parsed = monthlyExpenseSummarySchema.safeParse(req.query);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues
+        .map((err: any) => err.message)
+        .join(", ");
+      throw createError(errorMessages, 400);
+    }
+
+    const { month, year } = parsed.data;
+
+    const userId = req.user!.id;
+    const summary = await monthlyExpenseSummaryService(userId, month, year);
+
+    res.status(200).json({
+      success: true,
+      data: summary,
+    });
+  }catch (error) {
+    next(error);
+  }
+};
+
+

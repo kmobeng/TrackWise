@@ -42,7 +42,7 @@ export const getSingleCategoryService = async (
     const category = await prisma.category.findFirst({
       where: {
         id: categoryId,
-        userId,
+        OR: [{ userId }, { isDefault: true }],
       },
     });
 
@@ -62,13 +62,16 @@ export const updateCategoryService = async (
 ) => {
   try {
     const category = await prisma.category.findUnique({
-      where: { id: categoryId, userId },
+      where: { id: categoryId },
     });
 
     if (!category) throw createError("Category not found", 404);
 
     if (category.isDefault)
       throw createError("Cannot update a default category", 403);
+
+    if (category.userId !== userId)
+      throw createError("Unauthorized to update this category", 403);
 
     return await prisma.category.update({
       where: { id: categoryId },
@@ -84,13 +87,16 @@ export const deleteCategoryService = async (
   userId: string,
 ) => {
   const category = await prisma.category.findUnique({
-    where: { id: categoryId, userId },
+    where: { id: categoryId },
   });
 
   if (!category) throw createError("Category not found", 404);
 
   if (category.isDefault)
     throw createError("Cannot delete a default category", 403);
+
+  if (category.userId !== userId)
+    throw createError("Unauthorized to update this category", 403);
 
   return await prisma.category.delete({
     where: { id: categoryId },
