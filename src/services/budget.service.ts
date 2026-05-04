@@ -1,28 +1,13 @@
 import { prisma } from "../lib/prisma";
+import { toCedis } from "../utils/convertAmount.util";
+import { createError } from "../utils/error.util";
 
 export const setBudgetService = async (userId: string, amount: number) => {
-  try {
-    const existingBudget = await prisma.budget.findUnique({
-      where: { userId },
-    });
-    if (existingBudget) {
-      const updatedBudget = await prisma.budget.update({
-        where: { userId },
-        data: { amount },
-      });
-      return updatedBudget;
-    } else {
-      const newBudget = await prisma.budget.create({
-        data: {
-          userId,
-          amount,
-        },
-      });
-      return newBudget;
-    }
-  } catch (error) {
-    throw error;
-  }
+  return await prisma.budget.upsert({
+    where: { userId },
+    update: { amount },
+    create: { userId, amount },
+  });
 };
 
 export const getBudgetService = async (userId: string) => {
@@ -43,18 +28,6 @@ export const getBudgetService = async (userId: string) => {
   }
 };
 
-export const updateBudgetService = async (userId: string, amount: number) => {
-  try {
-    const updatedBudget = await prisma.budget.update({
-      where: { userId },
-      data: { amount },
-    });
-    return updatedBudget;
-  } catch (error) {
-    throw error;
-  }
-};
-
 export const deleteBudgetService = async (userId: string) => {
   try {
     await prisma.budget.delete({
@@ -63,4 +36,49 @@ export const deleteBudgetService = async (userId: string) => {
   } catch (error) {
     throw error;
   }
+};
+
+export const setCategoryBudgetService = async (
+  userId: string,
+  categoryId: string,
+  amount: number,
+) => {
+  const budget = await prisma.budget.findUnique({
+    where: { userId },
+    include: { categoryBudgets: true },
+  });
+
+  if (!budget) throw createError("Please set an overall budget first", 400);
+
+  const totalAllocated = budget.categoryBudgets
+    .filter((cb) => cb.categoryId !== categoryId) // exclude current if updating
+    .reduce((acc, cb) => acc + cb.amount, 0);
+
+  if (totalAllocated + amount > budget.amount) {
+    throw createError(
+      `Amount exceeds budget. You have GHS ${toCedis(budget.amount - totalAllocated)} remaining to allocate`,
+      400,
+    );
+  }
+
+  return await prisma.categoryBudget.upsert({
+    where: { budgetId_categoryId: { budgetId: budget.id, categoryId } },
+    update: { amount },
+    create: { budgetId: budget.id, categoryId, amount },
+  });
+};
+
+export const deleteCategoryBudgetService = async (
+  userId: string,
+  categoryId: string,
+) => {
+  const budget = await prisma.budget.findUnique({
+    where: { userId },
+  });
+
+  if (!budget) throw createError("Budget not found", 404);
+
+  return await prisma.categoryBudget.delete({
+    where: { budgetId_categoryId: { budgetId: budget.id, categoryId } },
+  });
 };

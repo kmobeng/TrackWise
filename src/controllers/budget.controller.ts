@@ -1,11 +1,15 @@
 import { Request, Response, NextFunction } from "express";
-import { createBudgetSchema } from "../validators/budget.validator";
+import {
+  createBudgetSchema,
+  deleteCategoryBudgetSchema,
+  setCategoryBudgetSchema,
+} from "../validators/budget.validator";
 import { createError } from "../utils/error.util";
 import {
   deleteBudgetService,
+  deleteCategoryBudgetService,
   getBudgetService,
   setBudgetService,
-  updateBudgetService,
 } from "../services/budget.service";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
@@ -49,30 +53,6 @@ export const getBudget = async (
   }
 };
 
-export const updateBudget = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const parsed = createBudgetSchema.safeParse(req.body);
-    if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
-    }
-
-    const { amount } = parsed.data;
-
-    const budget = await updateBudgetService(req.user!.id, amount);
-
-    res.status(200).json({ success: true, data: budget });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const deleteBudget = async (
   req: AuthRequest,
   res: Response,
@@ -89,3 +69,46 @@ export const deleteBudget = async (
   }
 };
 
+export const setCategoryBudget = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const parsed = setCategoryBudgetSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues
+        .map((err: any) => err.message)
+        .join(", ");
+      throw createError(errorMessages, 400);
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteCategoryBudget = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const parsed = deleteCategoryBudgetSchema.safeParse(req.query);
+
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues
+        .map((err: any) => err.message)
+        .join(", ");
+      throw createError(errorMessages, 400);
+    }
+
+    const { categoryId } = parsed.data;
+    const userId = req.user!.id;
+
+    const result = await deleteCategoryBudgetService(userId, categoryId);
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};

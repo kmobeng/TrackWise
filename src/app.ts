@@ -9,6 +9,7 @@ import { protect } from "./middlewares/auth.middleware";
 import { apiLimiter } from "./middlewares/limiter.middleware";
 import expenseRouter from "./routes/expense.route";
 import categoryRouter from "./routes/category.route";
+import budgetRouter from "./routes/budget.route";
 
 const app: Application = express();
 
@@ -34,6 +35,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/expenses", expenseRouter);
 app.use("/api/v1/categories", categoryRouter);
+app.use("/api/v1/budget", budgetRouter);
 
 app.use(errorHandler);
 export default app;

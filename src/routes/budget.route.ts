@@ -1,0 +1,13 @@
+import { Router  } from "express";
+import { protect } from "../middlewares/auth.middleware";
+import { deleteBudget, deleteCategoryBudget, getBudget, setBudget, setCategoryBudget } from "../controllers/budget.controller";
+
+const budgetRouter = Router();
+
+budgetRouter.use(protect)
+
+budgetRouter.route("/").post(setBudget).get(getBudget).delete(deleteBudget);
+
+budgetRouter.route("/category").post(setCategoryBudget).delete(deleteCategoryBudget);
+
+export default budgetRouter;
