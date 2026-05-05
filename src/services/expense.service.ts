@@ -1,5 +1,7 @@
+import { RedisClient } from "../config/redis.config";
 import { Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
+import { groq } from "../utils/autoCategorize.util";
 import { toCedis } from "../utils/convertAmount.util";
 import { createError } from "../utils/error.util";
 
@@ -339,4 +341,103 @@ export const categoryMonthlySummaryService = async (
     year,
     categories: results,
   };
+};
+
+export const aiMonthlySummaryService = async (
+  userId: string,
+  month: number,
+  year: number,
+) => {
+  const now = new Date();
+  const isCurrentMonth =
+    now.getUTCFullYear() === year && now.getUTCMonth() + 1 === month;
+
+  if (isCurrentMonth) {
+    throw createError("AI summary is only available for completed months", 400);
+  }
+
+  // check cache first
+  const cacheKey = `ai-summary:${userId}:${year}-${month}`;
+  const cached = await RedisClient.get(cacheKey);
+  if (cached) return JSON.parse(cached);
+
+  const monthName = new Date(Date.UTC(year, month - 1, 1)).toLocaleString("default", { month: "long" });
+
+  // fetch all data in parallel
+  const [stats, categoryBreakdown, dailyTotals, budget] = await Promise.all([
+    monthlyExpenseSummaryService(userId, month, year),
+    categoryMonthlySummaryService(userId, month, year),
+    dailyExpenseSummaryService(userId, month, year),
+    prisma.budget.findUnique({
+      where: { userId },
+      include: {
+        categoryBudgets: {
+          include: { category: { select: { name: true } } },
+        },
+      },
+    }),
+  ]);
+
+  // find highest spending day
+ const highestSpendingDay = dailyTotals.dailyTotals.length > 0
+  ? dailyTotals.dailyTotals.reduce((max, day) =>
+      day.total > max.total ? day : max
+    )
+  : null;
+
+  // category budgets
+  const categoryBudgets = budget?.categoryBudgets.map((cb) => ({
+    category: cb.category.name,
+    budget: toCedis(cb.amount),
+  })) ?? [];
+
+  // percentage change from previous month
+  const percentageChange =
+    stats.previousMonthTotal === 0
+      ? null
+      : (((stats.totalSpent - stats.previousMonthTotal) / stats.previousMonthTotal) * 100).toFixed(1);
+
+  const prompt = `
+You are a personal finance assistant writing a monthly expense summary report.
+
+Data for ${monthName} ${year}:
+- Total spent: GHS ${stats.totalSpent}
+- Previous month total: GHS ${stats.previousMonthTotal}
+- Percentage change from last month: ${percentageChange !== null ? `${percentageChange}%` : "No previous month data"}
+- Expenses logged this month: ${stats.expenseCount.currentMonth}
+- Highest spending category: ${stats.mostSpentCategory.name} (GHS ${stats.mostSpentCategory.total})
+- Highest spending day: ${highestSpendingDay?.date} (GHS ${highestSpendingDay?.total})
+- Category breakdown: ${JSON.stringify(categoryBreakdown.categories, null, 2)}
+- Category budgets: ${JSON.stringify(categoryBudgets, null, 2)}
+
+Guidelines:
+- Write exactly 4 paragraphs in prose, no bullet points
+- Paragraph 1: overall spending summary, compare to last month with the exact percentage change
+- Paragraph 2: break down the top 2-3 categories with specific numbers, mention if any exceeded or came close to their budget
+- Paragraph 3: mention the highest spending day and any spending patterns you notice from the data
+- Paragraph 4: give 2-3 specific and actionable suggestions for next month based on the data
+- Use "GHS" for all amounts
+- Be specific with numbers, never be vague
+- Tone: friendly financial advisor
+- Do NOT suggest the user reach out for help or contact anyone
+- Do NOT end with offers of assistance or support
+- End with an encouraging but self-contained closing statement
+`;
+
+  const response = await groq.chat.completions.create({
+    model: "llama-3.1-8b-instant",
+    messages: [{ role: "user", content: prompt }],
+    temperature: 0.7,
+  });
+
+  const result = {
+    month,
+    year,
+    summary: response.choices[0]?.message.content?.trim(),
+  };
+
+  // no expiry — past month data never changes
+  await RedisClient.set(cacheKey, JSON.stringify(result));
+
+  return result;
 };

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  aiMonthlySummary,
   autoCategorizeExpense,
   categoryMonthlySummary,
   createExpense,
@@ -22,6 +23,7 @@ expenseRouter.post("/auto-categorize", autoCategorizeExpense);
 expenseRouter.get("/summary", monthlyExpenseSummary);
 expenseRouter.get("/daily-summary", dailyExpenseSummary);
 expenseRouter.get("/category-summary", categoryMonthlySummary);
+expenseRouter.get("/ai-summary", aiMonthlySummary);
 
 expenseRouter
   .route("/:expenseId")

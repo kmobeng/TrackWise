@@ -18,6 +18,7 @@ import {
   getSingleExpenseService,
   monthlyExpenseSummaryService,
   updateExpenseService,
+  aiMonthlySummaryService,
 } from "../services/expense.service";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import { toCedis, toPesewas } from "../utils/convertAmount.util";
@@ -292,13 +293,10 @@ export const autoCategorizeExpense = async (
     }
 
     const categories = await prisma.category.findMany({
-      where: {
-        OR: [{ userId: req.user!.id }, { isDefault: true }],
-      },
+      where: { OR: [{ userId: req.user!.id }, { isDefault: true }] },
     });
 
     const categoryNames = categories.map((c) => c.name);
-
     const result = await extractExpenseDetails(
       parsed.data.description,
       categoryNames,
@@ -308,24 +306,48 @@ export const autoCategorizeExpense = async (
       throw createError("Could not extract amount from description", 400);
     }
 
-    const amount = toPesewas(result.amount);
-
     const category =
       categories.find((c) => c.name === result.category) ||
       categories.find((c) => c.isDefault && c.name === "Other");
 
-    const expense = await createExpenseService(
-      amount,
-      result.description,
-      new Date(result.date),
-      category!.id,
-      req.user!.id,
-    );
-
-    expense.amount = toCedis(expense.amount);
     res.status(200).json({
       success: true,
-      data: expense,
+      data: {
+        amount: result.amount,
+        description: result.description,
+        date: result.date,
+        category: {
+          id: category!.id,
+          name: category!.name,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const aiMonthlySummary = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const parsed = monthlyExpenseSummarySchema.safeParse(req.query);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues
+        .map((err: any) => err.message)
+        .join(", ");
+      throw createError(errorMessages, 400);
+    }
+
+    const { month, year } = parsed.data;
+    const userId = req.user!.id;
+    const summary = await aiMonthlySummaryService(userId, month, year);
+
+    res.status(200).json({
+      success: true,
+      data: summary,
     });
   } catch (error) {
     next(error);
