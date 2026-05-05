@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import {
   createExpenseSchema,
   dailyExpenseSummarySchema,
@@ -10,6 +10,7 @@ import { prisma } from "../lib/prisma";
 import {
   createExpenseService,
   deleteExpenseService,
+  categoryMonthlySummaryService,
   dailyExpenseSummaryService,
   getExpensesService,
   getSingleExpenseService,
@@ -223,6 +224,33 @@ export const dailyExpenseSummary = async (
     const { month, year } = parsed.data;
     const userId = req.user!.id;
     const summary = await dailyExpenseSummaryService(userId, month, year);
+
+    res.status(200).json({
+      success: true,
+      data: summary,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const categoryMonthlySummary = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const parsed = monthlyExpenseSummarySchema.safeParse(req.query);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues
+        .map((err: any) => err.message)
+        .join(", ");
+      throw createError(errorMessages, 400);
+    }
+
+    const { month, year } = parsed.data;
+    const userId = req.user!.id;
+    const summary = await categoryMonthlySummaryService(userId, month, year);
 
     res.status(200).json({
       success: true,

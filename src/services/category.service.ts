@@ -1,4 +1,3 @@
-import { create } from "ts-node";
 import { prisma } from "../lib/prisma";
 import { createError } from "../utils/error.util";
 

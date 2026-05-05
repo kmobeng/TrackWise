@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  categoryMonthlySummary,
   createExpense,
   dailyExpenseSummary,
   deleteExpense,
@@ -18,6 +19,7 @@ expenseRouter.route("/").post(createExpense).get(getExpenses);
 
 expenseRouter.get("/summary", monthlyExpenseSummary);
 expenseRouter.get("/daily-summary", dailyExpenseSummary);
+expenseRouter.get("/category-summary", categoryMonthlySummary);
 
 expenseRouter
   .route("/:expenseId")

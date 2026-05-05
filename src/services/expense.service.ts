@@ -241,3 +241,41 @@ export const dailyExpenseSummaryService = async (
     dailyTotals,
   };
 };
+
+export const categoryMonthlySummaryService = async (
+  userId: string,
+  month: number,
+  year: number,
+) => {
+  const startOfMonth = new Date(Date.UTC(year, month - 1, 1));
+  const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+
+  const summary = await prisma.expense.groupBy({
+    by: ["categoryId"],
+    where: { userId, date: { gte: startOfMonth, lte: endOfMonth } },
+    _sum: { amount: true },
+    orderBy: { _sum: { amount: "desc" } },
+  });
+
+  const categoryIds = summary.map((item) => item.categoryId);
+  const categories = await prisma.category.findMany({
+    where: { id: { in: categoryIds } },
+    select: { id: true, name: true },
+  });
+
+  const categoryNameById = new Map(
+    categories.map((category) => [category.id, category.name]),
+  );
+
+  const results = summary.map((item) => ({
+    categoryId: item.categoryId,
+    categoryName: categoryNameById.get(item.categoryId) ?? "Unknown",
+    total: toCedis(item._sum.amount ?? 0),
+  }));
+
+  return {
+    month,
+    year,
+    categories: results,
+  };
+};
