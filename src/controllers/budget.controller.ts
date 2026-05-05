@@ -10,6 +10,7 @@ import {
   deleteCategoryBudgetService,
   getBudgetService,
   setBudgetService,
+  setCategoryBudgetService,
 } from "../services/budget.service";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
@@ -82,6 +83,17 @@ export const setCategoryBudget = async (
         .join(", ");
       throw createError(errorMessages, 400);
     }
+
+    const { categoryId, amount } = parsed.data;
+    const userId = req.user!.id;
+
+    const categoryBudget = await setCategoryBudgetService(
+      userId,
+      categoryId,
+      amount,
+    );
+
+    res.status(200).json({ success: true, data: categoryBudget });
   } catch (error) {
     next(error);
   }
@@ -93,7 +105,7 @@ export const deleteCategoryBudget = async (
   next: NextFunction,
 ) => {
   try {
-    const parsed = deleteCategoryBudgetSchema.safeParse(req.query);
+    const parsed = deleteCategoryBudgetSchema.safeParse(req.params);
 
     if (!parsed.success) {
       const errorMessages = parsed.error.issues

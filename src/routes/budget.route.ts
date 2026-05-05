@@ -8,6 +8,7 @@ budgetRouter.use(protect)
 
 budgetRouter.route("/").post(setBudget).get(getBudget).delete(deleteBudget);
 
-budgetRouter.route("/category").post(setCategoryBudget).delete(deleteCategoryBudget);
+budgetRouter.route("/category").post(setCategoryBudget)
+budgetRouter.route("/category/:categoryId").delete(deleteCategoryBudget)
 
 export default budgetRouter;

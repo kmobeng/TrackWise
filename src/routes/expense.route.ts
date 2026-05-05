@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createExpense,
+  dailyExpenseSummary,
   deleteExpense,
   getExpenses,
   getSingleExpense,
@@ -16,6 +17,7 @@ expenseRouter.use(protect); // Apply authentication middleware to all routes in 
 expenseRouter.route("/").post(createExpense).get(getExpenses);
 
 expenseRouter.get("/summary", monthlyExpenseSummary);
+expenseRouter.get("/daily-summary", dailyExpenseSummary);
 
 expenseRouter
   .route("/:expenseId")

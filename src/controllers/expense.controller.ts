@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import {
   createExpenseSchema,
+  dailyExpenseSummarySchema,
   monthlyExpenseSummarySchema,
   updateExpenseSchema,
 } from "../validators/expense.validator";
@@ -9,6 +10,7 @@ import { prisma } from "../lib/prisma";
 import {
   createExpenseService,
   deleteExpenseService,
+  dailyExpenseSummaryService,
   getExpensesService,
   getSingleExpenseService,
   monthlyExpenseSummaryService,
@@ -199,9 +201,34 @@ export const monthlyExpenseSummary = async (
       success: true,
       data: summary,
     });
-  }catch (error) {
+  } catch (error) {
     next(error);
   }
 };
 
+export const dailyExpenseSummary = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const parsed = dailyExpenseSummarySchema.safeParse(req.query);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues
+        .map((err: any) => err.message)
+        .join(", ");
+      throw createError(errorMessages, 400);
+    }
 
+    const { month, year } = parsed.data;
+    const userId = req.user!.id;
+    const summary = await dailyExpenseSummaryService(userId, month, year);
+
+    res.status(200).json({
+      success: true,
+      data: summary,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -137,7 +137,7 @@ export const monthlyExpenseSummaryService = async (
   const startOfPrevMonth = new Date(Date.UTC(prevYear, prevMonth - 1, 1));
   const endOfPrevMonth = new Date(Date.UTC(prevYear, prevMonth, 0, 23, 59, 59));
 
-  const [summary, prevMonthExpenses] = await Promise.all([
+  const [summary, currentMonthStats, prevMonthStats] = await Promise.all([
     prisma.expense.groupBy({
       by: ["categoryId"],
       where: { userId, date: { gte: startOfMonth, lte: endOfMonth } },
@@ -145,15 +145,22 @@ export const monthlyExpenseSummaryService = async (
       orderBy: { _sum: { amount: "desc" } },
     }),
     prisma.expense.aggregate({
+      where: { userId, date: { gte: startOfMonth, lte: endOfMonth } },
+      _count: { _all: true },
+    }),
+    prisma.expense.aggregate({
       where: { userId, date: { gte: startOfPrevMonth, lte: endOfPrevMonth } },
       _sum: { amount: true },
+      _count: { _all: true },
     }),
   ]);
 
   const totalSpent = toCedis(
     summary.reduce((acc, s) => acc + (s._sum.amount ?? 0), 0),
   );
-  const previousMonthTotal = toCedis(prevMonthExpenses._sum.amount ?? 0);
+  const previousMonthTotal = toCedis(prevMonthStats._sum.amount ?? 0);
+  const currentMonthCount = currentMonthStats._count._all ?? 0;
+  const previousMonthCount = prevMonthStats._count._all ?? 0;
 
   const mostSpentCategory = summary[0]
     ? await prisma.category.findUnique({
@@ -173,5 +180,64 @@ export const monthlyExpenseSummaryService = async (
       name: mostSpentCategory?.name ?? "N/A",
       total: mostSpentAmount,
     },
+    expenseCount: {
+      currentMonth: currentMonthCount,
+      previousMonth: previousMonthCount,
+    },
+  };
+};
+
+export const dailyExpenseSummaryService = async (
+  userId: string,
+  month: number,
+  year: number,
+) => {
+  const startOfMonth = new Date(Date.UTC(year, month - 1, 1));
+  const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+
+  const now = new Date();
+  const isCurrentMonth =
+    now.getUTCFullYear() === year && now.getUTCMonth() + 1 === month;
+  const endOfRange = isCurrentMonth
+    ? new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          23,
+          59,
+          59,
+          999,
+        ),
+      )
+    : endOfMonth;
+
+  const expenses = await prisma.expense.findMany({
+    where: { userId, date: { gte: startOfMonth, lte: endOfRange } },
+    select: { date: true, amount: true },
+    orderBy: { date: "asc" },
+  });
+
+  const totalsByDay = new Map<string, number>();
+  for (const expense of expenses) {
+    const dayKey = expense.date.toISOString().slice(0, 10);
+    totalsByDay.set(dayKey, (totalsByDay.get(dayKey) ?? 0) + expense.amount);
+  }
+
+  const dailyTotals = [] as { date: string; total: number }[];
+  for (
+    let d = new Date(startOfMonth);
+    d <= endOfRange;
+    d.setUTCDate(d.getUTCDate() + 1)
+  ) {
+    const key = d.toISOString().slice(0, 10);
+    const total = totalsByDay.get(key) ?? 0;
+    dailyTotals.push({ date: key, total: toCedis(total) });
+  }
+
+  return {
+    month,
+    year,
+    dailyTotals,
   };
 };
