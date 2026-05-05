@@ -2,6 +2,7 @@ import { Response, NextFunction } from "express";
 import {
   createExpenseSchema,
   dailyExpenseSummarySchema,
+  getExpensesQuerySchema,
   monthlyExpenseSummarySchema,
   updateExpenseSchema,
 } from "../validators/expense.validator";
@@ -76,19 +77,31 @@ export const getExpenses = async (
   next: NextFunction,
 ) => {
   try {
-    const userId = req.user!.id;
-    const expenses = await getExpensesService(userId);
+    const parsed = getExpensesQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues
+        .map((err: any) => err.message)
+        .join(", ");
+      throw createError(errorMessages, 400);
+    }
+    const { page, limit, sortBy, sortOrder, startDate, endDate, desc } = parsed.data;
 
-    const formattedExpenses = expenses.map((expense) => ({
-      ...expense,
-      amount: toCedis(expense.amount),
-    }));
+    const userId = req.user!.id;
+    const expenses = await getExpensesService({
+      userId,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      startDate,
+      endDate,
+      desc,
+    });
 
     res.status(200).json({
-      success: true,
-      result: formattedExpenses.length,
-      data: formattedExpenses,
-    });
+  success: true,
+  ...expenses,
+});
   } catch (error) {
     next(error);
   }

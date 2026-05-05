@@ -1,3 +1,4 @@
+import { Prisma } from "../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { toCedis } from "../utils/convertAmount.util";
 import { createError } from "../utils/error.util";
@@ -25,20 +26,80 @@ export const createExpenseService = async (
   }
 };
 
-export const getExpensesService = async (userId: string) => {
-  try {
-    const expenses = await prisma.expense.findMany({
-      where: { userId },
-      orderBy: { date: "desc" },
-    });
+interface GetExpensesParams {
+  userId: string;
+  page?: number;
+  limit?: number;
+  sortBy?: "date" | "amount" | "category";
+  sortOrder?: "asc" | "desc";
+  startDate?: Date | undefined;
+  endDate?: Date | undefined;
+  desc?: string | undefined;
+}
 
-    if (expenses.length == 0) {
-      throw createError("No expenses found", 404);
-    }
-    return expenses;
-  } catch (error) {
-    throw error;
+export const getExpensesService = async ({
+  userId,
+  page = 1,
+  limit = 10,
+  sortBy = "date",
+  sortOrder = "desc",
+  startDate,
+  endDate,
+  desc,
+}: GetExpensesParams) => {
+  // build filters
+  const where: Prisma.ExpenseWhereInput = { userId };
+
+  if (startDate || endDate) {
+    where.date = {};
+    if (startDate) where.date.gte = startDate;
+    if (endDate) where.date.lte = endDate;
   }
+
+  if (desc) {
+    where.description = { contains: desc, mode: "insensitive" };
+  }
+
+  // build sorting
+  let orderBy: Prisma.ExpenseOrderByWithRelationInput;
+
+  if (sortBy === "category") {
+    orderBy = { category: { name: sortOrder } };
+  } else {
+    orderBy = { [sortBy]: sortOrder };
+  }
+
+  // pagination
+  const skip = (page - 1) * limit;
+
+  // run queries in parallel
+  const [expenses, total] = await Promise.all([
+    prisma.expense.findMany({
+      where,
+      orderBy,
+      skip,
+      take: limit,
+      include: {
+        category: { select: { id: true, name: true, color: true, icon: true } },
+      },
+    }),
+    prisma.expense.count({ where }),
+  ]);
+
+  // convert amounts to cedis
+  const data = expenses.map((e) => ({ ...e, amount: toCedis(e.amount) }));
+
+  return {
+    data,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page < Math.ceil(total / limit),
+      hasPrevPage: page > 1,
+    },
+  };
 };
 
 export const getSingleExpenseService = async (

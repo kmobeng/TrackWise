@@ -17,3 +17,13 @@ export const monthlyExpenseSummarySchema = z.object({
 });
 
 export const dailyExpenseSummarySchema = monthlyExpenseSummarySchema;
+
+export const getExpensesQuerySchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(10),
+  sortBy: z.enum(["date", "amount", "category"]).default("date"),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+  desc: z.string().optional(), 
+});
