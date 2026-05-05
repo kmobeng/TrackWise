@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  autoCategorizeExpense,
   categoryMonthlySummary,
   createExpense,
   dailyExpenseSummary,
@@ -17,6 +18,7 @@ expenseRouter.use(protect); // Apply authentication middleware to all routes in 
 
 expenseRouter.route("/").post(createExpense).get(getExpenses);
 
+expenseRouter.post("/auto-categorize", autoCategorizeExpense);
 expenseRouter.get("/summary", monthlyExpenseSummary);
 expenseRouter.get("/daily-summary", dailyExpenseSummary);
 expenseRouter.get("/category-summary", categoryMonthlySummary);

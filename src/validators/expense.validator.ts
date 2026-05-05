@@ -27,3 +27,7 @@ export const getExpensesQuerySchema = z.object({
   endDate: z.coerce.date().optional(),
   desc: z.string().optional(), 
 });
+
+export const autoCategorizeExpenseSchema = z.object({
+  description: z.string().min(1, "Description is required"),
+});
