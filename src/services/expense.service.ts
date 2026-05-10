@@ -192,6 +192,14 @@ export const monthlyExpenseSummaryService = async (
   month: number,
   year: number,
 ) => {
+  const cacheKey = `expense:monthly-summary:${userId}:${year}:${month}`;
+  const cacheTtlSeconds = 86400;
+
+    const cached = await RedisClient.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
   const startOfMonth = new Date(Date.UTC(year, month - 1, 1));
   const endOfMonth = new Date(Date.UTC(year, month, 0, 23, 59, 59));
 
@@ -234,7 +242,7 @@ export const monthlyExpenseSummaryService = async (
 
   const mostSpentAmount = summary[0] ? toCedis(summary[0]._sum.amount ?? 0) : 0;
 
-  return {
+  const response = {
     month,
     year,
     totalSpent,
@@ -248,6 +256,16 @@ export const monthlyExpenseSummaryService = async (
       previousMonth: previousMonthCount,
     },
   };
+
+    await RedisClient.set(
+      cacheKey,
+      JSON.stringify(response),
+      "EX",
+      cacheTtlSeconds,
+    );
+ 
+
+  return response;
 };
 
 export const dailyExpenseSummaryService = async (

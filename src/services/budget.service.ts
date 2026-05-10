@@ -30,8 +30,22 @@ export const getBudgetService = async (userId: string) => {
 
 export const deleteBudgetService = async (userId: string) => {
   try {
-    await prisma.budget.delete({
-      where: { userId },
+    await prisma.$transaction(async (tx) => {
+      const budget = await tx.budget.findUnique({
+        where: { userId },
+      });
+
+      if (!budget) {
+        throw createError("Budget not found", 404);
+      }
+
+      await tx.categoryBudget.deleteMany({
+        where: { budgetId: budget.id },
+      });
+
+      await tx.budget.delete({
+        where: { id: budget.id },
+      });
     });
   } catch (error) {
     throw error;

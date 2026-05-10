@@ -95,9 +95,34 @@ export const deleteCategoryService = async (
     throw createError("Cannot delete a default category", 403);
 
   if (category.userId !== userId)
-    throw createError("Unauthorized to update this category", 403);
+    throw createError("Unauthorized to delete this category", 403);
 
-  return await prisma.category.delete({
-    where: { id: categoryId },
+  return await prisma.$transaction(async (tx) => {
+    const otherCategory = await tx.category.findFirst({
+      where: { name: "Other", isDefault: true },
+    });
+
+    const resolvedOther =
+      otherCategory ??
+      (await tx.category.create({
+        data: { name: "Other", isDefault: true },
+      }));
+
+    if (resolvedOther.id === categoryId) {
+      throw createError("Cannot delete the Other category", 403);
+    }
+
+    await tx.expense.updateMany({
+      where: { categoryId, userId },
+      data: { categoryId: resolvedOther.id },
+    });
+
+    await tx.categoryBudget.deleteMany({
+      where: { categoryId },
+    });
+
+    return tx.category.delete({
+      where: { id: categoryId },
+    });
   });
 };
