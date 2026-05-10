@@ -8,7 +8,6 @@ import {
   getSingleCategoryService,
   updateCategoryService,
 } from "../services/category.service";
-import { Request } from "../middlewares/auth.middleware";
 import { ca } from "zod/locales";
 
 export const createCategory = async (

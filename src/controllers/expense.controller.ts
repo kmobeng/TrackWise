@@ -1,4 +1,4 @@
-import { Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import {
   autoCategorizeExpenseSchema,
   createExpenseSchema,
@@ -20,9 +20,7 @@ import {
   updateExpenseService,
   aiMonthlySummaryService,
 } from "../services/expense.service";
-import { Request } from "../middlewares/auth.middleware";
 import { toCedis, toPesewas } from "../utils/convertAmount.util";
-import { ca } from "zod/locales";
 import { extractExpenseDetails } from "../utils/autoCategorize.util";
 
 export const createExpense = async (

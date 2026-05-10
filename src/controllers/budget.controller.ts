@@ -12,7 +12,6 @@ import {
   setBudgetService,
   setCategoryBudgetService,
 } from "../services/budget.service";
-import { Request } from "../middlewares/auth.middleware";
 
 export const setBudget = async (
   req: Request,

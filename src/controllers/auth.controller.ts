@@ -23,6 +23,7 @@ import {
 import crypto from "crypto";
 import sendEmail from "../utils/email.util";
 import logger from "../config/winston.config";
+import { User } from "../generated/prisma/client";
 
 const expiresAt = new Date(
   Date.now() +
@@ -302,34 +303,26 @@ export const googleRedirect = async (
   next: NextFunction,
 ) => {
   try {
-    const user = req.user as IUser;
+    const user = req.user as User;
     const authAction =
       (req.authInfo as { authAction?: "signup" | "login" } | undefined)
         ?.authAction ?? "login";
 
-    const refreshToken = crypto.randomBytes(32).toString("hex");
-    user.refreshToken = crypto
-      .createHash("sha256")
-      .update(refreshToken)
-      .digest("hex");
+    const refreshToken = generateRefreshToken();
 
-    const refreshTokenExpires = new Date(
-      Date.now() +
-        Number(process.env.REFRESH_JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000,
-    );
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken.hashedRefreshToken,
+        userId: user.id,
+        expiresAt,
+      },
+    });
 
-    user.refreshTokenExpires = refreshTokenExpires;
+    generateToken(user.id, req, res);
 
-    await user.save({ validateBeforeSave: false });
+    sendToken(req, res, refreshToken.refreshToken);
 
-    const accessToken = await Token(res, user);
-    const refreshCookieOptions = setRefreshTokenCookieOptions();
-    res.cookie("refreshToken", refreshToken, refreshCookieOptions);
-
-    const userResponse: any = user.toObject();
-    delete userResponse.password;
-    delete userResponse.refreshToken;
-    delete userResponse.refreshTokenExpires;
+    const { password: _, ...userResponse } = user;
 
     res.status(200).json({
       status: "success",
