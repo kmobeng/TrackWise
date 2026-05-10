@@ -23,7 +23,6 @@ import {
 import crypto from "crypto";
 import sendEmail from "../utils/email.util";
 import logger from "../config/winston.config";
-import { success } from "zod";
 
 const expiresAt = new Date(
   Date.now() +
@@ -292,6 +291,54 @@ export const resetPassword = async (
     res
       .status(200)
       .json({ success: true, message: "Password reset successful" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const googleRedirect = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const user = req.user as IUser;
+    const authAction =
+      (req.authInfo as { authAction?: "signup" | "login" } | undefined)
+        ?.authAction ?? "login";
+
+    const refreshToken = crypto.randomBytes(32).toString("hex");
+    user.refreshToken = crypto
+      .createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+
+    const refreshTokenExpires = new Date(
+      Date.now() +
+        Number(process.env.REFRESH_JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000,
+    );
+
+    user.refreshTokenExpires = refreshTokenExpires;
+
+    await user.save({ validateBeforeSave: false });
+
+    const accessToken = await Token(res, user);
+    const refreshCookieOptions = setRefreshTokenCookieOptions();
+    res.cookie("refreshToken", refreshToken, refreshCookieOptions);
+
+    const userResponse: any = user.toObject();
+    delete userResponse.password;
+    delete userResponse.refreshToken;
+    delete userResponse.refreshTokenExpires;
+
+    res.status(200).json({
+      status: "success",
+      message:
+        authAction === "signup"
+          ? "Account created with Google. Please set password to continue."
+          : "Logged in with Google successfully.",
+      data: { user: userResponse },
+    });
   } catch (error) {
     next(error);
   }

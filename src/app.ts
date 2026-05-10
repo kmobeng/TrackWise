@@ -10,6 +10,7 @@ import { apiLimiter } from "./middlewares/limiter.middleware";
 import expenseRouter from "./routes/expense.route";
 import categoryRouter from "./routes/category.route";
 import budgetRouter from "./routes/budget.route";
+import passport from "passport";
 
 const app: Application = express();
 
@@ -31,6 +32,8 @@ app.use(apiLimiter); // apply rate limiter to all requests
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "API is running" });
 });
+
+app.use(passport.initialize());
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/expenses", expenseRouter);

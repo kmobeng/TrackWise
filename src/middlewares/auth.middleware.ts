@@ -11,17 +11,8 @@ interface JWTPayload {
   exp: number;
 }
 
-// extending request object to add req.user
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    role: string;
-  };
-}
-
 export const protect = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -64,7 +55,7 @@ export const protect = async (
 };
 
 export const restrictTo = (...roles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     if (!roles.includes(req.user?.role!)) {
       return next(
         createError("You do not have permission to accesss this action", 403),

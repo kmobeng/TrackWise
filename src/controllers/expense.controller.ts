@@ -20,13 +20,13 @@ import {
   updateExpenseService,
   aiMonthlySummaryService,
 } from "../services/expense.service";
-import { AuthRequest } from "../middlewares/auth.middleware";
+import { Request } from "../middlewares/auth.middleware";
 import { toCedis, toPesewas } from "../utils/convertAmount.util";
 import { ca } from "zod/locales";
 import { extractExpenseDetails } from "../utils/autoCategorize.util";
 
 export const createExpense = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
@@ -75,7 +75,7 @@ export const createExpense = async (
 };
 
 export const getExpenses = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -112,7 +112,7 @@ export const getExpenses = async (
 };
 
 export const getSingleExpense = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -137,7 +137,7 @@ export const getSingleExpense = async (
 };
 
 export const updateExpense = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -174,7 +174,7 @@ export const updateExpense = async (
 };
 
 export const deleteExpense = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -197,7 +197,7 @@ export const deleteExpense = async (
 };
 
 export const monthlyExpenseSummary = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -225,7 +225,7 @@ export const monthlyExpenseSummary = async (
 };
 
 export const dailyExpenseSummary = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -252,7 +252,7 @@ export const dailyExpenseSummary = async (
 };
 
 export const categoryMonthlySummary = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -279,7 +279,7 @@ export const categoryMonthlySummary = async (
 };
 
 export const autoCategorizeExpense = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -328,7 +328,7 @@ export const autoCategorizeExpense = async (
 };
 
 export const aiMonthlySummary = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {

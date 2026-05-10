@@ -12,10 +12,10 @@ import {
   setBudgetService,
   setCategoryBudgetService,
 } from "../services/budget.service";
-import { AuthRequest } from "../middlewares/auth.middleware";
+import { Request } from "../middlewares/auth.middleware";
 
 export const setBudget = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -39,7 +39,7 @@ export const setBudget = async (
 };
 
 export const getBudget = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -55,7 +55,7 @@ export const getBudget = async (
 };
 
 export const deleteBudget = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -71,7 +71,7 @@ export const deleteBudget = async (
 };
 
 export const setCategoryBudget = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -100,7 +100,7 @@ export const setCategoryBudget = async (
 };
 
 export const deleteCategoryBudget = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {

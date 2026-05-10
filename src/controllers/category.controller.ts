@@ -8,11 +8,11 @@ import {
   getSingleCategoryService,
   updateCategoryService,
 } from "../services/category.service";
-import { AuthRequest } from "../middlewares/auth.middleware";
+import { Request } from "../middlewares/auth.middleware";
 import { ca } from "zod/locales";
 
 export const createCategory = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -39,7 +39,7 @@ export const createCategory = async (
 };
 
 export const getAllCategories = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -58,7 +58,7 @@ export const getAllCategories = async (
 };
 
 export const getSingleCategory = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -83,7 +83,7 @@ export const getSingleCategory = async (
 };
 
 export const updateCategory = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -118,7 +118,7 @@ export const updateCategory = async (
 };
 
 export const deleteCategory = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
