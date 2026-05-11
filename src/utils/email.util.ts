@@ -35,7 +35,7 @@ const sendEmail = async (options: any) => {
 
 export const maskEmail = (email: string) => {
   const [local, domain] = email.split("@");
-  const masked = local!.slice(0, 2) + "***" + local!.slice(-2);
+  const masked = "*****" + local!.slice(-2);
   return `${masked}@${domain}`;
 };
 

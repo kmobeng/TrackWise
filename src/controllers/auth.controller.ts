@@ -14,6 +14,7 @@ import {
   loginService,
   logoutService,
   refreshTokenService,
+  requestEmailVerificationService,
   signUpService,
 } from "../services/auth.service";
 import {
@@ -25,7 +26,6 @@ import crypto from "crypto";
 import sendEmail, { maskEmail } from "../utils/email.util";
 import logger from "../config/winston.config";
 import { User } from "../generated/prisma/client";
-import { success } from "zod";
 
 const expiresAt = new Date(
   Date.now() +
@@ -75,7 +75,15 @@ export const signUp = async (
     sendToken(req, res, refreshToken);
 
     const { password: _, ...user } = newUser;
-    res.status(201).json({ success: true, data: user });
+
+    await requestEmailVerificationService(newUser.id, email);
+
+    res.status(201).json({
+      success: true,
+      message:
+        "Account created successfully. Email verification token has been sent to your email",
+      data: user,
+    });
   } catch (error) {
     next(error);
   }
@@ -348,39 +356,7 @@ export const requestEmailVerification = async (
       throw createError("Email already verified", 400);
     }
 
-    const token = crypto.randomInt(100000, 999999).toString();
-
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-    await prisma.emailVerificationToken.upsert({
-      where: { userId: req.user!.id },
-      update: {
-        token: hashedToken,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-      },
-      create: {
-        token: hashedToken,
-        userId: req.user!.id,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-      },
-    });
-
-    try {
-      const message = `Your email verification code is: ${token}. This code is valid for 10 minutes. If you did not request this, please ignore this email.`;
-      await sendEmail({
-        email: req.user?.email,
-        subject: "Email Verification Code",
-        message,
-      });
-    } catch (error) {
-      await prisma.emailVerificationToken.delete({
-        where: { userId: req.user!.id },
-      });
-      throw createError(
-        "There was an error sending the email. Please try again later.",
-        500,
-      );
-    }
+    await requestEmailVerificationService(req.user!.id, req.user!.email);
 
     res.status(200).json({
       success: true,
