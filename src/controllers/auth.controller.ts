@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import {
+  emailVerificationTokenSchema,
   forgotPasswordSchema,
   loginSchema,
   resetPasswordSchema,
@@ -21,7 +22,7 @@ import {
   sendToken,
 } from "../utils/auth.util";
 import crypto from "crypto";
-import sendEmail from "../utils/email.util";
+import sendEmail, { maskEmail } from "../utils/email.util";
 import logger from "../config/winston.config";
 import { User } from "../generated/prisma/client";
 import { success } from "zod";
@@ -332,6 +333,109 @@ export const googleRedirect = async (
           : "Logged in with Google successfully.",
       data: { user: userData },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const requestEmailVerification = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    if (req.user?.isEmailVerified) {
+      throw createError("Email already verified", 400);
+    }
+
+    const token = crypto.randomInt(100000, 999999).toString();
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    await prisma.emailVerificationToken.upsert({
+      where: { userId: req.user!.id },
+      update: {
+        token: hashedToken,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+      create: {
+        token: hashedToken,
+        userId: req.user!.id,
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+    });
+
+    try {
+      const message = `Your email verification code is: ${token}. This code is valid for 10 minutes. If you did not request this, please ignore this email.`;
+      await sendEmail({
+        email: req.user?.email,
+        subject: "Email Verification Code",
+        message,
+      });
+    } catch (error) {
+      await prisma.emailVerificationToken.delete({
+        where: { userId: req.user!.id },
+      });
+      throw createError(
+        "There was an error sending the email. Please try again later.",
+        500,
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Verification code sent to ${maskEmail(req.user!.email)}`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const parsed = emailVerificationTokenSchema.safeParse({
+      token: req.body.token,
+    });
+
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues
+        .map((err: any) => err.message)
+        .join(", ");
+      throw createError(errorMessages, 400);
+    }
+
+    const { token } = parsed.data;
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const emailVerificationToken =
+      await prisma.emailVerificationToken.findUnique({
+        where: { token: hashedToken },
+      });
+
+    if (
+      !emailVerificationToken ||
+      emailVerificationToken.expiresAt < new Date()
+    ) {
+      throw createError("Invalid or expired verification token", 400);
+    }
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: emailVerificationToken.userId },
+        data: { isEmailVerified: true },
+      }),
+      prisma.emailVerificationToken.delete({
+        where: { id: emailVerificationToken.id },
+      }),
+    ]);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Email verified successfully" });
   } catch (error) {
     next(error);
   }

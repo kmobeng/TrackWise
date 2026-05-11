@@ -33,4 +33,10 @@ const sendEmail = async (options: any) => {
   await transporter.sendMail(mailOptions);
 };
 
+export const maskEmail = (email: string) => {
+  const [local, domain] = email.split("@");
+  const masked = local!.slice(0, 2) + "***" + local!.slice(-2);
+  return `${masked}@${domain}`;
+};
+
 export default sendEmail;

@@ -11,11 +11,12 @@ import {
   monthlyExpenseSummary,
   updateExpense,
 } from "../controllers/expense.controller";
-import app from "../app";
-import { protect } from "../middlewares/auth.middleware";
+import { isEmailVerified, isPasswordChangeRequired, protect } from "../middlewares/auth.middleware";
 
 const expenseRouter = Router();
 expenseRouter.use(protect); // Apply authentication middleware to all routes in this router
+expenseRouter.use(isEmailVerified)
+expenseRouter.use(isPasswordChangeRequired)
 
 expenseRouter.route("/").post(createExpense).get(getExpenses);
 

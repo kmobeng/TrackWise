@@ -47,6 +47,8 @@ export const protect = async (
       id: currentUser.id,
       email: currentUser.email,
       role: currentUser.role!,
+      isEmailVerified: currentUser.isEmailVerified,
+      needToChangePassword: currentUser.needToChangePassword,
     };
     next();
   } catch (error) {
@@ -63,4 +65,30 @@ export const restrictTo = (...roles: string[]) => {
     }
     next();
   };
+};
+
+export const isEmailVerified = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (!req.user?.isEmailVerified) {
+    return next(
+      createError("Please verify your email to access this action", 403),
+    );
+  }
+  next();
+};
+
+export const isPasswordChangeRequired = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (req.user?.needToChangePassword) {
+    return next(
+      createError("Please change your password to access this action", 403),
+    );
+  }
+  next();
 };

@@ -34,3 +34,10 @@ export const resetPasswordSchema = z.object({
 export const resetTokenSchema = z.object({
   token: z.string().min(1, { message: "Reset token is required" }),
 });
+
+export const emailVerificationTokenSchema = z.object({
+  token: z.coerce
+    .string()
+    .length(6, { message: "Token must be exactly 6 digits" })
+    .regex(/^\d+$/, { message: "Token must contain only digits" }),
+});
