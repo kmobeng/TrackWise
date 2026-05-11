@@ -5,12 +5,12 @@ import cookieParser from "cookie-parser";
 import cookieSession from "cookie-session";
 import authRouter from "./routes/auth.route";
 import httpLogger from "./config/httpLogger.config";
-import { protect } from "./middlewares/auth.middleware";
 import { apiLimiter } from "./middlewares/limiter.middleware";
 import expenseRouter from "./routes/expense.route";
 import categoryRouter from "./routes/category.route";
 import budgetRouter from "./routes/budget.route";
 import passport from "passport";
+import "./config/passport.config";
 
 const app: Application = express();
 

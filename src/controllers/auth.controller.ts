@@ -24,6 +24,7 @@ import crypto from "crypto";
 import sendEmail from "../utils/email.util";
 import logger from "../config/winston.config";
 import { User } from "../generated/prisma/client";
+import { success } from "zod";
 
 const expiresAt = new Date(
   Date.now() +
@@ -308,29 +309,28 @@ export const googleRedirect = async (
       (req.authInfo as { authAction?: "signup" | "login" } | undefined)
         ?.authAction ?? "login";
 
-    const refreshToken = generateRefreshToken();
+    generateToken(user.id, req, res);
 
+    const { refreshToken, hashedRefreshToken } = generateRefreshToken();
     await prisma.refreshToken.create({
       data: {
-        token: refreshToken.hashedRefreshToken,
+        token: hashedRefreshToken,
         userId: user.id,
         expiresAt,
       },
     });
 
-    generateToken(user.id, req, res);
+    sendToken(req, res, refreshToken);
 
-    sendToken(req, res, refreshToken.refreshToken);
-
-    const { password: _, ...userResponse } = user;
+    const { password: _, ...userData } = user;
 
     res.status(200).json({
-      status: "success",
+      success: true,
       message:
         authAction === "signup"
           ? "Account created with Google. Please set password to continue."
           : "Logged in with Google successfully.",
-      data: { user: userResponse },
+      data: { user: userData },
     });
   } catch (error) {
     next(error);

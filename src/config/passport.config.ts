@@ -21,7 +21,7 @@ passport.use(
   new GoogleStrategy(
     {
       //options for the google strategy
-      callbackURL: "/api/auth/google/redirect",
+      callbackURL: "/api/v1/auth/google/redirect",
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     },
@@ -69,7 +69,6 @@ passport.use(
               googleId: profile.id,
               provider: "google",
               password: hashedPassword, //dummy password for required field
-              passwordConfirm: `google_${profile.id}`,
               needToChangePassword: true,
               isEmailVerified: true,
             },
