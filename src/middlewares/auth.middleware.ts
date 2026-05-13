@@ -81,14 +81,14 @@ export const isEmailVerified = (
   next();
 };
 
-export const isPasswordChangeRequired = (
+export const requirePasswordChanged = (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   if (req.user?.needToChangePassword) {
     return next(
-      createError("Please change your password to access this action", 403),
+      createError("Please set a password to perform this action", 403),
     );
   }
   next();

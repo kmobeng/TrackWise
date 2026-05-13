@@ -69,6 +69,18 @@ export const deleteMe = async (
     const userId = req.user?.id;
     await deleteMeService(userId!);
 
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
     res.status(204).json({
       success: true,
     });
@@ -83,7 +95,7 @@ export const changePassword = async (
   next: NextFunction,
 ) => {
   try {
-    if (req.user?.provider === "google") {
+    if (req.user?.provider === "google" && req.user?.needToChangePassword) {
       throw createError(
         "You cannot change password for Google authenticated accounts",
         400,
@@ -111,25 +123,37 @@ export const changePassword = async (
   }
 };
 
-export const setPassword = async(req: Request, res: Response, next: NextFunction) => {
+export const setPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     if (req.user?.provider !== "google") {
-        throw createError(
-            "This endpoint is only for Google authenticated accounts",
-            400,
-        );
+      throw createError(
+        "This endpoint is only for Google authenticated accounts",
+        400,
+      );
+    }
+
+    if (!req.user?.needToChangePassword) {
+      throw createError(
+        "You have already set a password for your account",
+        400,
+      );
     }
 
     const parsed = setPasswordSchema.safeParse(req.body);
     if (!parsed.success) {
-        const errorMessages = parsed.error.issues            .map((err: any) => err.message)
-            .join(", ");
-        throw createError(errorMessages, 400);
+      const errorMessages = parsed.error.issues
+        .map((err: any) => err.message)
+        .join(", ");
+      throw createError(errorMessages, 400);
     }
     const userId = req.user?.id;
     const { password } = parsed.data;
 
-    await setPasswordService(userId!, password,req.user?.email!);
+    await setPasswordService(userId!, password, req.user?.email!);
 
     res.status(200).json({
       success: true,
@@ -140,26 +164,30 @@ export const setPassword = async(req: Request, res: Response, next: NextFunction
   }
 };
 
-export const verifyEmailUpdate = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const parsed = emailVerificationTokenSchema.safeParse(req.body);
-        if (!parsed.success) {
-            const errorMessages = parsed.error.issues
-                .map((err: any) => err.message)
-                .join(", ");
-            throw createError(errorMessages, 400);
-        }
+export const verifyEmailUpdate = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const parsed = emailVerificationTokenSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const errorMessages = parsed.error.issues
+        .map((err: any) => err.message)
+        .join(", ");
+      throw createError(errorMessages, 400);
+    }
 
-        const { token } = parsed.data;
+    const { token } = parsed.data;
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    await verifyEmailUpdateService(req.user?.id!,hashedToken);
+    await verifyEmailUpdateService(req.user?.id!, hashedToken);
 
     res.status(200).json({
-        success: true,
-        message: "Email updated successfully",
+      success: true,
+      message: "Email updated successfully",
     });
-    } catch (error) {
-        next(error);
-    }
-}
+  } catch (error) {
+    next(error);
+  }
+};
