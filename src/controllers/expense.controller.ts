@@ -20,6 +20,7 @@ import {
   updateExpenseService,
   aiMonthlySummaryService,
 } from "../services/expense.service";
+import { getDefaultCategoriesCached } from "../services/category.service";
 import { toCedis, toPesewas } from "../utils/convertAmount.util";
 import { extractExpenseDetails } from "../utils/autoCategorize.util";
 
@@ -290,9 +291,14 @@ export const autoCategorizeExpense = async (
       throw createError(errorMessages, 400);
     }
 
-    const categories = await prisma.category.findMany({
-      where: { OR: [{ userId: req.user!.id }, { isDefault: true }] },
-    });
+    const [userCategories, defaultCategories] = await Promise.all([
+      prisma.category.findMany({
+        where: { userId: req.user!.id },
+      }),
+      getDefaultCategoriesCached(),
+    ]);
+
+    const categories = [...userCategories, ...defaultCategories];
 
     const categoryNames = categories.map((c) => c.name);
     const result = await extractExpenseDetails(

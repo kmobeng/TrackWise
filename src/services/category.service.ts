@@ -1,5 +1,23 @@
 import { prisma } from "../lib/prisma";
+import { RedisClient } from "../config/redis.config";
 import { createError } from "../utils/error.util";
+
+const DEFAULT_CATEGORIES_CACHE_KEY = "categories:defaults";
+
+export const getDefaultCategoriesCached = async () => {
+  const cached = await RedisClient.get(DEFAULT_CATEGORIES_CACHE_KEY);
+  if (cached) {
+    return JSON.parse(cached) 
+  }
+
+  const categories = await prisma.category.findMany({
+    where: { isDefault: true },
+    select: { id: true, name: true },
+  });
+
+  await RedisClient.setex(DEFAULT_CATEGORIES_CACHE_KEY,86400, JSON.stringify(categories));
+  return categories;
+};
 
 export const createCategoryService = async (name: string, userId: string) => {
   try {
