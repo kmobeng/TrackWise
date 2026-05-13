@@ -27,6 +27,7 @@ model User {
   provider  String?   @default("local")
   needToChangePassword Boolean @default(false)
   isEmailVerified Boolean @default(false)
+  pendingEmail String?
   expenses  Expense[]
   budgets   Budget[]
   categories Category[]

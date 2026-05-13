@@ -11,6 +11,7 @@ import categoryRouter from "./routes/category.route";
 import budgetRouter from "./routes/budget.route";
 import passport from "passport";
 import "./config/passport.config";
+import userRouter from "./routes/user.routes";
 
 const app: Application = express();
 
@@ -39,6 +40,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/expenses", expenseRouter);
 app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/budget", budgetRouter);
+app.use("/api/v1/users", userRouter);
 
 app.use(errorHandler);
 export default app;

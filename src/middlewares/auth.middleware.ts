@@ -49,6 +49,7 @@ export const protect = async (
       role: currentUser.role!,
       isEmailVerified: currentUser.isEmailVerified,
       needToChangePassword: currentUser.needToChangePassword,
+      provider: currentUser.provider!,
     };
     next();
   } catch (error) {

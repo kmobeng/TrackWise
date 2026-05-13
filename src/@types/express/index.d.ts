@@ -9,6 +9,7 @@ declare global {
         role: Role;
         isEmailVerified: boolean;
         needToChangePassword: boolean;
+        provider: string;
       };
     }
   }
