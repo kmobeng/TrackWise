@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import { createError } from "../utils/error.util";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
-import logger from "../config/winston.config";
 
 // definig jwt payload
 interface JWTPayload {
