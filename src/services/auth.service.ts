@@ -8,6 +8,7 @@ import {
 } from "../utils/auth.util";
 import sendEmail from "../utils/email.util";
 import crypto from "crypto";
+import { Request, Response } from "express";
 
 export const signUpService = async (
   name: string,
@@ -44,8 +45,8 @@ export const loginService = async (email: string, password: string) => {
 
 export const refreshTokenService = async (
   hashedRefreshToken: string,
-  req: any,
-  res: any,
+  req: Request,
+  res: Response,
   expiresAt: Date,
 ) => {
   try {
