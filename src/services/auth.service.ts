@@ -8,7 +8,6 @@ import {
 } from "../utils/auth.util";
 import sendEmail from "../utils/email.util";
 import crypto from "crypto";
-import { Request } from "express";
 
 export const signUpService = async (
   name: string,
