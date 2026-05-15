@@ -185,7 +185,7 @@ export const logout = async (
   }
 };
 
-export const forgotPasswoerd = async (
+export const forgotPassword = async (
   req: Request,
   res: Response,
   next: NextFunction,
