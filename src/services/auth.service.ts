@@ -130,9 +130,12 @@ export const requestEmailVerificationService = async (
   }
 };
 
-export const verifyEmailUpdateService = async (userId: string, token: string) => {
+export const verifyEmailUpdateService = async (
+  userId: string,
+  token: string,
+) => {
   try {
- const verificationToken = await prisma.emailVerificationToken.findUnique({
+    const verificationToken = await prisma.emailVerificationToken.findUnique({
       where: { token },
     });
 
@@ -140,12 +143,15 @@ export const verifyEmailUpdateService = async (userId: string, token: string) =>
       throw createError("Invalid or expired token", 400);
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } ,select: { pendingEmail: true }});
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { pendingEmail: true },
+    });
     if (!user?.pendingEmail) throw createError("No pending email update", 400);
 
     await prisma.$transaction([
       prisma.user.update({
-        where: { id: userId},
+        where: { id: userId },
         data: { email: user.pendingEmail, pendingEmail: null },
       }),
       prisma.emailVerificationToken.delete({
@@ -153,7 +159,7 @@ export const verifyEmailUpdateService = async (userId: string, token: string) =>
       }),
     ]);
 
-    return
+    return;
   } catch (error) {
     throw error;
   }

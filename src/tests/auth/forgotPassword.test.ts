@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma";
 import { forgotPassword } from "../../controllers/auth.controller";
 import { Request, Response, NextFunction } from "express";
 import * as utils from "../../utils/email.util";
+import logger from "../../config/winston.config";
 
 jest.mock("../../lib/prisma", () => ({
   prisma: {
@@ -14,14 +15,19 @@ jest.mock("../../lib/prisma", () => ({
     },
   },
 }));
+jest.mock("../../config/winston.config", () => ({
+  info: jest.fn(),
+  error: jest.fn(),
+}));
 
 jest.mock("../../utils/email.util");
 
-const mockRequest = (body = {}) => ({
-  body,
-  protocol: "http",
-  get: jest.fn().mockReturnValue("localhost:3000"),
-}) as unknown as Request
+const mockRequest = (body = {}) =>
+  ({
+    body,
+    protocol: "http",
+    get: jest.fn().mockReturnValue("localhost:3000"),
+  }) as unknown as Request;
 const mockResponse = () => {
   const res: any = {};
   res.status = jest.fn().mockReturnValue(res);
