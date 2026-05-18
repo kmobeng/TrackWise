@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  forgotPasswoerd,
+  forgotPassword,
   googleRedirect,
   login,
   logout,
@@ -22,7 +22,7 @@ const authRouter = Router();
 authRouter.post("/signup", loginLimiter, signUp);
 authRouter.post("/login", loginLimiter, login);
 authRouter.post("/refresh", refreshToken);
-authRouter.post("/forgot-password", resetPasswordLimiter, forgotPasswoerd);
+authRouter.post("/forgot-password", resetPasswordLimiter, forgotPassword);
 authRouter.post("/reset-password/:token", resetPasswordLimiter, resetPassword);
 
 authRouter.get(
