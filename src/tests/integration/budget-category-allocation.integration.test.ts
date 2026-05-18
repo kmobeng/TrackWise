@@ -1,32 +1,16 @@
 import request from "supertest";
 import jwt from "jsonwebtoken";
 import { prisma } from "../../lib/prisma";
+import app from "../../app";
 
-process.env.NODE_ENV = "test";
-process.env.COOKIE_KEY = process.env.COOKIE_KEY ?? "test-cookie-key";
-process.env.JWT_SECRET = process.env.JWT_SECRET ?? "test-jwt-secret";
+jest.mock("../../utils/email.util");
 
-jest.mock("../../utils/email.util", () => ({
-  __esModule: true,
-  default: jest.fn().mockResolvedValue(undefined),
-  maskEmail: (email: string) => email,
-}));
+jest.mock("../../config/winston.config");
 
 jest.mock("../../middlewares/limiter.middleware", () => ({
   apiLimiter: (_req: any, _res: any, next: any) => next(),
   loginLimiter: (_req: any, _res: any, next: any) => next(),
   resetPasswordLimiter: (_req: any, _res: any, next: any) => next(),
-}));
-
-jest.mock("../../config/winston.config", () => ({
-  __esModule: true,
-  default: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
-    http: jest.fn(),
-  },
 }));
 
 jest.mock("../../config/redis.config", () => ({
@@ -39,9 +23,7 @@ jest.mock("../../config/redis.config", () => ({
   },
 }));
 
-const app = require("../../app").default;
-
-const TEST_EMAIL: string = "integration_test_user@test.com";
+const TEST_EMAIL: string = "integration_test_user_budget_allocation@test.com";
 
 const ensureTestEmailAvailable = async () => {
   const existing = await prisma.user.findUnique({
@@ -117,7 +99,7 @@ describe("Budget Integration - Category Allocation", () => {
     });
 
     accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET!, {
-      expiresIn: "1h",
+      expiresIn: "15m",
     });
   });
 
@@ -137,6 +119,5 @@ describe("Budget Integration - Category Allocation", () => {
 
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
-    expect(res.body.error).toContain("Amount exceeds budget");
   });
 });

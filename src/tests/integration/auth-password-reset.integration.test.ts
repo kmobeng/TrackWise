@@ -3,8 +3,6 @@ import sendEmail from "../../utils/email.util";
 import { prisma } from "../../lib/prisma";
 import app from "../../app";
 
-process.env.COOKIE_KEY = process.env.COOKIE_KEY ?? "test-cookie-key";
-
 jest.mock("../../utils/email.util", () =>
   jest.fn().mockResolvedValue(undefined),
 );
@@ -36,7 +34,7 @@ jest.mock("../../config/redis.config", () => ({
   },
 }));
 
-const TEST_EMAIL: string = "integration_test_user@test.com";
+const TEST_EMAIL: string = "integration_test_user_password_reset@test.com";
 
 const ensureTestEmailAvailable = async () => {
   const existing = await prisma.user.findUnique({

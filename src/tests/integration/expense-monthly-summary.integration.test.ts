@@ -2,16 +2,9 @@ import request from "supertest";
 import jwt from "jsonwebtoken";
 import { prisma } from "../../lib/prisma";
 import { RedisClient } from "../../config/redis.config";
+import app from "../../app";
 
-process.env.NODE_ENV = "test";
-process.env.COOKIE_KEY = process.env.COOKIE_KEY ?? "test-cookie-key";
-process.env.JWT_SECRET = process.env.JWT_SECRET ?? "test-jwt-secret";
-
-jest.mock("../../utils/email.util", () => ({
-  __esModule: true,
-  default: jest.fn().mockResolvedValue(undefined),
-  maskEmail: (email: string) => email,
-}));
+jest.mock("../../utils/email.util");
 
 jest.mock("../../middlewares/limiter.middleware", () => ({
   apiLimiter: (_req: any, _res: any, next: any) => next(),
@@ -19,16 +12,7 @@ jest.mock("../../middlewares/limiter.middleware", () => ({
   resetPasswordLimiter: (_req: any, _res: any, next: any) => next(),
 }));
 
-jest.mock("../../config/winston.config", () => ({
-  __esModule: true,
-  default: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
-    http: jest.fn(),
-  },
-}));
+jest.mock("../../config/winston.config");
 
 jest.mock("../../config/redis.config", () => ({
   RedisClient: {
@@ -40,9 +24,7 @@ jest.mock("../../config/redis.config", () => ({
   },
 }));
 
-const app = require("../../app").default;
-
-const TEST_EMAIL: string = "integration_test_user@test.com";
+const TEST_EMAIL: string = "integration_test_user_expense_summary@test.com";
 
 const ensureTestEmailAvailable = async () => {
   const existing = await prisma.user.findUnique({
