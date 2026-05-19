@@ -65,7 +65,8 @@ describe("User Integration - Verify Email Update", () => {
     });
     userId = user.id;
 
-    rawToken = crypto.randomBytes(32).toString("hex");
+    rawToken = crypto.randomInt(100000, 999999).toString();
+
     const hashedToken = crypto
       .createHash("sha256")
       .update(rawToken)
@@ -94,8 +95,6 @@ describe("User Integration - Verify Email Update", () => {
       .post("/api/v1/users/verify-email-update")
       .set("Cookie", [`accessToken=${accessToken}`])
       .send({ token: rawToken });
-
-    console.log(res.body);
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
