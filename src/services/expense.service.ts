@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import { groq } from "../utils/autoCategorize.util";
 import { toCedis } from "../utils/convertAmount.util";
 import { createError } from "../utils/error.util";
+import { stringify } from "csv-stringify/sync";
 
 export const createExpenseService = async (
   amount: number,
@@ -82,7 +83,7 @@ export const getExpensesService = async ({
       skip,
       take: limit,
       include: {
-        category: { select: { id: true, name: true, color: true, icon: true } },
+        category: { select: { id: true, name: true } },
       },
     }),
     prisma.expense.count({ where }),
@@ -459,3 +460,25 @@ Guidelines:
 
   return result;
 };
+
+export const exportDataAsCSVService = async (userId: string) => {
+  const expenses = await prisma.expense.findMany({
+    where: { userId },
+    include: {
+      category: { select: { name: true } },
+    },
+    orderBy: { date: "asc" },
+  });
+
+  const records = expenses.map((e) => ({
+    Date: e.date.toISOString().slice(0, 10),
+    Amount: toCedis(e.amount),
+    Description: e.description || "",
+    Category: e.category.name,
+  }));
+
+  return stringify(records, {
+    header: true,
+    columns: ["Date", "Amount", "Description", "Category"],
+  });
+}

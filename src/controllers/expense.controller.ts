@@ -19,6 +19,7 @@ import {
   monthlyExpenseSummaryService,
   updateExpenseService,
   aiMonthlySummaryService,
+  exportDataAsCSVService,
 } from "../services/expense.service";
 import { getDefaultCategoriesCached } from "../services/category.service";
 import { toCedis, toPesewas } from "../utils/convertAmount.util";
@@ -353,6 +354,23 @@ export const aiMonthlySummary = async (
       success: true,
       data: summary,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const exportDataAsCSV = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.user!.id;
+    const csvData = await exportDataAsCSVService(userId);
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", 'attachment; filename="expenses.csv"');
+    res.status(200).send(csvData);
   } catch (error) {
     next(error);
   }
