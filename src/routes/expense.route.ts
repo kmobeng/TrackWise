@@ -7,6 +7,7 @@ import {
   dailyExpenseSummary,
   deleteExpense,
   exportDataAsCSV,
+  exportDataAsPDF,
   getExpenses,
   getSingleExpense,
   monthlyExpenseSummary,
@@ -30,7 +31,8 @@ expenseRouter.get("/summary", monthlyExpenseSummary);
 expenseRouter.get("/daily-summary", dailyExpenseSummary);
 expenseRouter.get("/category-summary", categoryMonthlySummary);
 expenseRouter.get("/ai-summary", aiMonthlySummary);
-expenseRouter.get("/csv", exportDataAsCSV);
+expenseRouter.get("/export/csv", exportDataAsCSV);
+expenseRouter.get("/export/pdf", exportDataAsPDF);
 
 expenseRouter
   .route("/:expenseId")

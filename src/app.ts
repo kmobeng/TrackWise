@@ -12,6 +12,7 @@ import budgetRouter from "./routes/budget.route";
 import passport from "passport";
 import "./config/passport.config";
 import userRouter from "./routes/user.routes";
+import { setupSwagger } from "./config/swagger.config";
 
 const app: Application = express();
 
@@ -35,6 +36,8 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use(passport.initialize());
+
+setupSwagger(app);
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/expenses", expenseRouter);

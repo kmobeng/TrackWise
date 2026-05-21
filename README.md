@@ -1,15 +1,17 @@
 # TrackWise Backend API
 
-TrackWise is a Node.js + TypeScript backend for expense tracking. It provides authentication, budgeting, expense management, AI-assisted summaries, and caching. The API uses PostgreSQL via Prisma and Redis for caching and token/session helpers.
+TrackWise is a Node.js + TypeScript backend for expense tracking. It provides authentication, budgeting, expense management, AI-assisted summaries, exports, and caching. The API uses PostgreSQL via Prisma and Redis for caching and token/session helpers.
 
 ## Features
 
 - Auth with JWT cookies and refresh tokens
 - Email verification and password reset flows
 - Google OAuth sign-in
-- Expense CRUD with monthly, daily, and category summaries
+- Expense CRUD with filters, pagination, and sorting
+- Monthly, daily, and category summaries
+- AI monthly summaries and auto-categorization (Groq)
+- CSV and PDF exports
 - Budgets with category-level allocations
-- AI monthly summaries (Groq)
 - Redis caching for monthly summaries, AI summaries, and default categories
 - Rate limiting and structured logging
 
@@ -55,8 +57,8 @@ Create a .env file using .env.example as a base.
 ### Database
 
 ```bash
-npx prisma migrate dev
-npx prisma generate
+npm run prisma:migrate
+npm run prisma:generate
 ```
 
 ### Seed Default Categories
@@ -73,15 +75,25 @@ npm run dev
 
 The server will start on http://localhost:5000 by default.
 
+Swagger UI is available at http://localhost:5000/api/v1/docs using the spec at swagger.yaml.
+
 ## Scripts
 
 - npm run dev: Start dev server with ts-node + nodemon
 - npm run build: Compile TypeScript to dist
 - npm start: Build and run the compiled server
+- npm run prisma:migrate: Run Prisma migrations (dev)
+- npm run prisma:generate: Generate Prisma client
+- npm run prisma:studio: Open Prisma Studio
+- npm run test: Run unit tests (excludes integration)
+- npm run test:integration: Run integration tests
+- npm run test:all: Run all tests
 
 ## API Endpoints (v1)
 
 Base path: /api/v1
+
+Swagger UI: http://localhost:5000/api/v1/docs (spec: swagger.yaml)
 
 ### Auth
 
@@ -117,6 +129,8 @@ Base path: /api/v1
 - GET /expenses/daily-summary
 - GET /expenses/category-summary
 - GET /expenses/ai-summary
+- GET /expenses/export/csv
+- GET /expenses/export/pdf
 
 ### Categories
 
@@ -155,6 +169,7 @@ See .env.example for the full list and defaults. Current variables used by the a
 ## Notes
 
 - JWTs are stored in httpOnly cookies.
+- Protected routes require a verified email and a set password.
 - AI summaries are only available for completed months.
 - Default categories are cached and seeded from prisma/seed.ts.
 - Email delivery uses a local SMTP server on localhost:1025 (see src/utils/email.util.ts).

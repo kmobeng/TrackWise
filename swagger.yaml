@@ -1,0 +1,1266 @@
+openapi: 3.0.3
+info:
+  title: TrackWise API
+  version: 1.0.0
+  description: Backend API for expense tracking, budgeting, and insights.
+servers:
+  - url: http://localhost:5000/api/v1
+tags:
+  - name: Auth
+  - name: Users
+  - name: Expenses
+  - name: Categories
+  - name: Budget
+security:
+  - cookieAuth: []
+paths:
+  /auth/signup:
+    post:
+      tags:
+        - Auth
+      summary: Sign up
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignUpInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh access token
+      security:
+        - refreshCookieAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /auth/forgot-password:
+    post:
+      tags:
+        - Auth
+      summary: Request password reset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /auth/reset-password/{token}:
+    post:
+      tags:
+        - Auth
+      summary: Reset password
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /auth/google:
+    get:
+      tags:
+        - Auth
+      summary: Google OAuth start
+      security: []
+      responses:
+        "302":
+          description: Redirect
+  /auth/google/redirect:
+    get:
+      tags:
+        - Auth
+      summary: Google OAuth redirect
+      security: []
+      responses:
+        "302":
+          description: Redirect
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /auth/request-email-verification:
+    post:
+      tags:
+        - Auth
+      summary: Request email verification
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /auth/verify-email:
+    post:
+      tags:
+        - Auth
+      summary: Verify email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /users/set-password:
+    post:
+      tags:
+        - Users
+      summary: Set password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetPasswordInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Get current user
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    patch:
+      tags:
+        - Users
+      summary: Update current user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags:
+        - Users
+      summary: Delete current user
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /users/verify-email-update:
+    post:
+      tags:
+        - Users
+      summary: Verify email update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /users/change-password:
+    post:
+      tags:
+        - Users
+      summary: Change password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /expenses:
+    post:
+      tags:
+        - Expenses
+      summary: Create expense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExpenseInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    get:
+      tags:
+        - Expenses
+      summary: List expenses
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - $ref: "#/components/parameters/SortByParam"
+        - $ref: "#/components/parameters/SortOrderParam"
+        - $ref: "#/components/parameters/StartDateParam"
+        - $ref: "#/components/parameters/EndDateParam"
+        - $ref: "#/components/parameters/DescParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /expenses/{expenseId}:
+    get:
+      tags:
+        - Expenses
+      summary: Get expense
+      parameters:
+        - $ref: "#/components/parameters/ExpenseIdParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags:
+        - Expenses
+      summary: Update expense
+      parameters:
+        - $ref: "#/components/parameters/ExpenseIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateExpenseInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - Expenses
+      summary: Delete expense
+      parameters:
+        - $ref: "#/components/parameters/ExpenseIdParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /expenses/auto-categorize:
+    post:
+      tags:
+        - Expenses
+      summary: Auto-categorize expense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutoCategorizeInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutoCategorizeResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /expenses/summary:
+    get:
+      tags:
+        - Expenses
+      summary: Monthly summary
+      parameters:
+        - $ref: "#/components/parameters/MonthParam"
+        - $ref: "#/components/parameters/YearParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonthlySummaryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /expenses/daily-summary:
+    get:
+      tags:
+        - Expenses
+      summary: Daily summary
+      parameters:
+        - $ref: "#/components/parameters/MonthParam"
+        - $ref: "#/components/parameters/YearParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailySummaryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /expenses/category-summary:
+    get:
+      tags:
+        - Expenses
+      summary: Category summary
+      parameters:
+        - $ref: "#/components/parameters/MonthParam"
+        - $ref: "#/components/parameters/YearParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategorySummaryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /expenses/ai-summary:
+    get:
+      tags:
+        - Expenses
+      summary: AI monthly summary
+      parameters:
+        - $ref: "#/components/parameters/MonthParam"
+        - $ref: "#/components/parameters/YearParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AISummaryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /expenses/export/csv:
+    get:
+      tags:
+        - Expenses
+      summary: Export expenses as CSV
+      responses:
+        "200":
+          description: OK
+          content:
+            text/csv:
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /expenses/export/pdf:
+    get:
+      tags:
+        - Expenses
+      summary: Export monthly summary as PDF
+      parameters:
+        - $ref: "#/components/parameters/MonthParam"
+        - $ref: "#/components/parameters/YearParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /categories:
+    post:
+      tags:
+        - Categories
+      summary: Create category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    get:
+      tags:
+        - Categories
+      summary: List categories
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /categories/{id}:
+    get:
+      tags:
+        - Categories
+      summary: Get category
+      parameters:
+        - $ref: "#/components/parameters/CategoryIdParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags:
+        - Categories
+      summary: Update category
+      parameters:
+        - $ref: "#/components/parameters/CategoryIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCategoryInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags:
+        - Categories
+      summary: Delete category
+      parameters:
+        - $ref: "#/components/parameters/CategoryIdParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /budget:
+    post:
+      tags:
+        - Budget
+      summary: Set budget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetBudgetInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BudgetResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    get:
+      tags:
+        - Budget
+      summary: Get budget
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BudgetResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags:
+        - Budget
+      summary: Delete budget
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /budget/category:
+    post:
+      tags:
+        - Budget
+      summary: Set category budget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetCategoryBudgetInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BudgetResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /budget/category/{categoryId}:
+    delete:
+      tags:
+        - Budget
+      summary: Delete category budget
+      parameters:
+        - $ref: "#/components/parameters/BudgetCategoryIdParam"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: accessToken
+    refreshCookieAuth:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+  parameters:
+    ExpenseIdParam:
+      name: expenseId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CategoryIdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    BudgetCategoryIdParam:
+      name: categoryId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+    SortByParam:
+      name: sortBy
+      in: query
+      schema:
+        type: string
+        enum: [date, amount, category]
+        default: date
+    SortOrderParam:
+      name: sortOrder
+      in: query
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+    StartDateParam:
+      name: startDate
+      in: query
+      schema:
+        type: string
+        format: date
+    EndDateParam:
+      name: endDate
+      in: query
+      schema:
+        type: string
+        format: date
+    DescParam:
+      name: desc
+      in: query
+      schema:
+        type: string
+    MonthParam:
+      name: month
+      in: query
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 12
+    YearParam:
+      name: year
+      in: query
+      required: true
+      schema:
+        type: integer
+        minimum: 2000
+        maximum: 2100
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+    MessageResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            message:
+              type: string
+              example: OK
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Validation error
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+        isEmailVerified:
+          type: boolean
+      required: [id, name, email]
+    UserResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/User"
+    AuthSuccessResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/User"
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        isDefault:
+          type: boolean
+      required: [id, name]
+    CategoryResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Category"
+    CategoryListResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Category"
+    Expense:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+        description:
+          type: string
+          nullable: true
+        date:
+          type: string
+          format: date-time
+        categoryId:
+          type: string
+          format: uuid
+        category:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+      required: [id, amount, date, categoryId]
+    ExpenseResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Expense"
+    ExpenseListResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Expense"
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+        hasNextPage:
+          type: boolean
+        hasPrevPage:
+          type: boolean
+    MonthlySummaryResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/MonthlySummary"
+    MonthlySummary:
+      type: object
+      properties:
+        month:
+          type: integer
+        year:
+          type: integer
+        totalSpent:
+          type: number
+        previousMonthTotal:
+          type: number
+        mostSpentCategory:
+          type: object
+          properties:
+            name:
+              type: string
+            total:
+              type: number
+        expenseCount:
+          type: object
+          properties:
+            currentMonth:
+              type: integer
+            previousMonth:
+              type: integer
+    DailySummaryResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/DailySummary"
+    DailySummary:
+      type: object
+      properties:
+        month:
+          type: integer
+        year:
+          type: integer
+        dailyTotals:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              total:
+                type: number
+    CategorySummaryResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/CategorySummary"
+    CategorySummary:
+      type: object
+      properties:
+        month:
+          type: integer
+        year:
+          type: integer
+        total:
+          type: number
+        categories:
+          type: array
+          items:
+            type: object
+            properties:
+              categoryId:
+                type: string
+                format: uuid
+              categoryName:
+                type: string
+              total:
+                type: number
+    AISummaryResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/AISummary"
+    AISummary:
+      type: object
+      properties:
+        month:
+          type: integer
+        year:
+          type: integer
+        summary:
+          type: string
+    AutoCategorizeResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                amount:
+                  type: number
+                description:
+                  type: string
+                date:
+                  type: string
+                  format: date
+                category:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+    BudgetResponse:
+      allOf:
+        - $ref: "#/components/schemas/SuccessResponse"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/Budget"
+    Budget:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+        categories:
+          type: array
+          items:
+            type: object
+            properties:
+              categoryId:
+                type: string
+                format: uuid
+              amount:
+                type: number
+    SignUpInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 255
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 255
+    ForgotPasswordInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+    ResetPasswordInput:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 255
+    VerifyEmailInput:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          pattern: "^\\d{6}$"
+    SetPasswordInput:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+          format: password
+          minLength: 8
+    ChangePasswordInput:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+    UpdateUserInput:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+    CreateExpenseInput:
+      type: object
+      required: [amount, date]
+      properties:
+        amount:
+          type: number
+          minimum: 0.01
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        categoryId:
+          type: string
+          format: uuid
+    UpdateExpenseInput:
+      type: object
+      properties:
+        amount:
+          type: number
+          minimum: 0.01
+        description:
+          type: string
+        date:
+          type: string
+          format: date
+        categoryId:
+          type: string
+          format: uuid
+    AutoCategorizeInput:
+      type: object
+      required: [description]
+      properties:
+        description:
+          type: string
+          minLength: 1
+    CreateCategoryInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+    UpdateCategoryInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+    SetBudgetInput:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          minimum: 0.01
+    SetCategoryBudgetInput:
+      type: object
+      required: [categoryId, amount]
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          minimum: 0.01
