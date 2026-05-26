@@ -35,20 +35,17 @@ export const createCategoryService = async (name: string, userId: string) => {
 };
 
 export const getAllCategoriesService = async (userId: string) => {
-  try {
-    const categories = await prisma.category.findMany({
-      where: {
-        userId,
-      },
-    });
+  return prisma.category.findMany({
+    where: { userId },
+    orderBy: { name: "asc" },
+  });
+};
 
-    if (categories.length == 0) {
-      throw createError("No categories found", 404);
-    }
-    return categories;
-  } catch (error) {
-    throw error;
-  }
+export const getDefaultCategoriesService = async () => {
+  return prisma.category.findMany({
+    where: { isDefault: true },
+    orderBy: { name: "asc" },
+  });
 };
 
 export const getSingleCategoryService = async (

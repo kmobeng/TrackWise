@@ -5,10 +5,10 @@ import {
   createCategoryService,
   deleteCategoryService,
   getAllCategoriesService,
+  getDefaultCategoriesService,
   getSingleCategoryService,
   updateCategoryService,
 } from "../services/category.service";
-import { ca } from "zod/locales";
 
 export const createCategory = async (
   req: Request,
@@ -45,6 +45,24 @@ export const getAllCategories = async (
   try {
     const userId = req.user!.id;
     const categories = await getAllCategoriesService(userId);
+
+    res.status(200).json({
+      success: true,
+      result: categories.length,
+      data: categories,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getDefaultCategories = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const categories = await getDefaultCategoriesService();
 
     res.status(200).json({
       success: true,

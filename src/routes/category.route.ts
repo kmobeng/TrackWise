@@ -3,6 +3,7 @@ import {
   createCategory,
   deleteCategory,
   getAllCategories,
+  getDefaultCategories,
   getSingleCategory,
   updateCategory,
 } from "../controllers/category.controller";
@@ -17,6 +18,7 @@ categoryRouter.use(protect); // protect all routes
 categoryRouter.use(isEmailVerified);
 categoryRouter.use(requirePasswordChanged);
 
+categoryRouter.get("/defaults", getDefaultCategories);
 categoryRouter.route("/").post(createCategory).get(getAllCategories);
 categoryRouter
   .route("/:id")
