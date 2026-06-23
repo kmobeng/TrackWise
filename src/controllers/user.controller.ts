@@ -42,10 +42,8 @@ export const updateMe = async (
   try {
     const parsed = updateMeSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
     const userId = req.user?.id;
     const { name, email } = parsed.data;
@@ -104,10 +102,8 @@ export const changePassword = async (
 
     const parsed = changePasswordSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
     const userId = req.user?.id;
     const { currentPassword, newPassword } = parsed.data;
@@ -145,10 +141,8 @@ export const setPassword = async (
 
     const parsed = setPasswordSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
     const userId = req.user?.id;
     const { password } = parsed.data;
@@ -172,10 +166,8 @@ export const verifyEmailUpdate = async (
   try {
     const parsed = emailVerificationTokenSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { token } = parsed.data;

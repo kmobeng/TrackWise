@@ -21,10 +21,8 @@ export const setBudget = async (
   try {
     const parsed = createBudgetSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { amount } = parsed.data;
@@ -77,10 +75,8 @@ export const setCategoryBudget = async (
   try {
     const parsed = setCategoryBudgetSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { categoryId, amount } = parsed.data;
@@ -107,10 +103,8 @@ export const deleteCategoryBudget = async (
     const parsed = deleteCategoryBudgetSchema.safeParse(req.params);
 
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { categoryId } = parsed.data;

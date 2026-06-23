@@ -34,10 +34,8 @@ export const createExpense = async (
   try {
     const parsed = createExpenseSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     let categoryId = parsed.data.categoryId;
@@ -83,10 +81,8 @@ export const getExpenses = async (
   try {
     const parsed = getExpensesQuerySchema.safeParse(req.query);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
     const { page, limit, sortBy, sortOrder, startDate, endDate, desc } =
       parsed.data;
@@ -148,10 +144,8 @@ export const updateExpense = async (
     }
     const parsed = updateExpenseSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const expense = await updateExpenseService(
@@ -205,10 +199,8 @@ export const monthlyExpenseSummary = async (
   try {
     const parsed = monthlyExpenseSummarySchema.safeParse(req.query);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { month, year } = parsed.data;
@@ -233,10 +225,8 @@ export const dailyExpenseSummary = async (
   try {
     const parsed = dailyExpenseSummarySchema.safeParse(req.query);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { month, year } = parsed.data;
@@ -260,10 +250,8 @@ export const categoryMonthlySummary = async (
   try {
     const parsed = monthlyExpenseSummarySchema.safeParse(req.query);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { month, year } = parsed.data;
@@ -287,10 +275,8 @@ export const autoCategorizeExpense = async (
   try {
     const parsed = autoCategorizeExpenseSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const [userCategories, defaultCategories] = await Promise.all([
@@ -341,10 +327,8 @@ export const aiMonthlySummary = async (
   try {
     const parsed = monthlyExpenseSummarySchema.safeParse(req.query);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { month, year } = parsed.data;
@@ -387,10 +371,8 @@ export const exportDataAsPDF = async (
     const userId = req.user!.id;
     const parsed = monthlyExpenseSummarySchema.safeParse(req.query);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { month, year } = parsed.data;

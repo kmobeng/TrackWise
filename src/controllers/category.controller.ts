@@ -18,10 +18,8 @@ export const createCategory = async (
   try {
     const parsed = createCategorySchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { name } = parsed.data;
@@ -111,10 +109,8 @@ export const updateCategory = async (
     }
     const parsed = createCategorySchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { name } = parsed.data;

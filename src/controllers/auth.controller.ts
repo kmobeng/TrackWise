@@ -40,10 +40,8 @@ export const signUp = async (
   try {
     const parsed = signUpSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { name, email, password } = parsed.data;
@@ -97,10 +95,8 @@ export const login = async (
   try {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { email, password } = parsed.data;
@@ -193,10 +189,8 @@ export const forgotPassword = async (
   try {
     const parsed = forgotPasswordSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { email } = parsed.data;
@@ -269,10 +263,8 @@ export const resetPassword = async (
 
     const parsed = resetPasswordSchema.safeParse(req.body);
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { token } = parsedToken.data;
@@ -378,10 +370,8 @@ export const verifyEmail = async (
     });
 
     if (!parsed.success) {
-      const errorMessages = parsed.error.issues
-        .map((err: any) => err.message)
-        .join(", ");
-      throw createError(errorMessages, 400);
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
     }
 
     const { token } = parsed.data;
