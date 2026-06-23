@@ -16,16 +16,7 @@ import { setupSwagger } from "./config/swagger.config";
 
 const app: Application = express();
 
-app.use(
-  cors(
-    process.env.NODE_ENV === "production"
-      ? {
-          origin: process.env.CLIENT_URL,
-          credentials: true,
-        }
-      : {}
-  )
-)
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
 app.use(httpLogger);
 app.use(express.json());

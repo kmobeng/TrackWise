@@ -1,13 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import logger from "../config/winston.config";
-import { success } from "zod";
 
 const sendErrorDev = (err: any, res: Response) => {
   res.status(err.statusCode).json({
     success: false,
-    error: err.errorMessage,
+    message: err.errorMessage,
     name: err.name,
-    message: err.message,
+    errorMessage: err.message,
     stack: err.stack,
     raw: err,
   });
@@ -17,13 +16,13 @@ const sendErrorProd = (err: any, res: Response) => {
   if (err.isOperational) {
     return res.status(err.statusCode).json({
       success: false,
-      error: err.errorMessage,
+      message: err.errorMessage,
     });
   }
 
   res.status(err.statusCode).json({
     success: false,
-    error: "Something went wrong. Please try again later.",
+    message: "Something went wrong. Please try again later.",
   });
 };
 
