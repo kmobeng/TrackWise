@@ -134,15 +134,23 @@ export const changePasswordService = async (
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
-    await prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        password: hashedPassword,
-        passwordChangedAt: new Date(),
-      },
-    });
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          password: hashedPassword,
+          passwordChangedAt: new Date(),
+        },
+      }),
+      prisma.refreshToken.deleteMany({
+        where: {
+          userId,
+        },
+      }),
+    ]);
 
     await sendEmail({
       email: user.email,

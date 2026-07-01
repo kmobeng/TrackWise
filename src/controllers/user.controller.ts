@@ -142,6 +142,11 @@ export const changePassword = async (
 
     await changePasswordService(userId!, currentPassword, newPassword);
 
+    const remainingTtl = req.user?.exp! - Math.floor(Date.now() / 1000);
+    if (remainingTtl > 0) {
+      RedisClient.setex(`blacklist:${req.user?.jti}`, remainingTtl, "true");
+    }
+
     res.status(200).json({
       success: true,
       message: "Password changed successfully",
@@ -180,6 +185,15 @@ export const setPassword = async (
     const { password } = parsed.data;
 
     await setPasswordService(userId!, password, req.user?.email!);
+
+    const remainingTtl = req.user?.exp! - Math.floor(Date.now() / 1000);
+    if (remainingTtl && remainingTtl > 0) {
+      await RedisClient.setex(
+        `blacklist:${req.user?.jti}`,
+        remainingTtl,
+        "true",
+      );
+    }
 
     const payload: JWTPayload = {
       id: req.user?.id!,

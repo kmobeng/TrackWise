@@ -196,6 +196,12 @@ export const logout = async (
       sameSite: "strict",
     });
 
+    const remainingTtl = req.user?.exp! - Math.floor(Date.now() / 1000);
+
+    if (remainingTtl > 0) {
+      RedisClient.setex(`blacklist:${req.user?.jti}`, remainingTtl, "true");
+    }
+
     res.status(200).json({ success: true, message: "Logged out successfully" });
   } catch (error) {
     next(error);
