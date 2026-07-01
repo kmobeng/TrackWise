@@ -1,6 +1,8 @@
-import jwt, { SignOptions } from "jsonwebtoken";
+import jwt, {  SignOptions } from "jsonwebtoken";
 import { Request, Response } from "express";
 import crypto from "crypto";
+import { JWTPayload } from "../middlewares/auth.middleware";
+import { v4 as uuidv4 } from "uuid";
 
 const setAccessTokenCookieOptions = () => {
   const cookieOptions: any = {
@@ -38,19 +40,20 @@ export const setRefreshTokenCookieOptions = () => {
   return RefreshCookieOptions;
 };
 
-export const generateToken = (
-  id: string,
+export const generateAccessToken = (
+  payload: JWTPayload,
   req: Request,
   res: Response,
 ): void => {
-  const token = jwt.sign({ id }, process.env.JWT_SECRET!, {
+  const jti = uuidv4();
+  const token = jwt.sign({ ...payload, jti }, process.env.JWT_SECRET!, {
     expiresIn: process.env.JWT_EXPIRES_IN!,
   } as SignOptions);
   const accessTokenCookieOptions = setAccessTokenCookieOptions();
   res.cookie("accessToken", token, accessTokenCookieOptions);
 };
 
-export const sendToken = (
+export const sendRefreshToken = (
   req: Request,
   res: Response,
   refreshToken: string,

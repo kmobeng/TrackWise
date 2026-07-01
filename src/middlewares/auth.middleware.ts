@@ -1,13 +1,19 @@
 import { Request, Response, NextFunction } from "express";
 import { createError } from "../utils/error.util";
 import jwt from "jsonwebtoken";
-import { prisma } from "../lib/prisma";
+import { RedisClient } from "../config/redis.config";
 
 // definig jwt payload
-interface JWTPayload {
+export interface JWTPayload {
   id: string;
-  iat: number;
-  exp: number;
+  isEmailVerified: boolean;
+  needToChangePassword: boolean;
+  role: string;
+  provider: string;
+  email: string;
+  jti?: string;
+  iat?: number;
+  exp?: number;
 }
 
 export const protect = async (
@@ -24,32 +30,13 @@ export const protect = async (
     // decode jwt token
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
 
-    // check whether decoded userId is in the db
-    const currentUser = await prisma.user.findUnique({
-      where: { id: decoded.id },
-    });
+    const isBlacklisted = await RedisClient.get(`blacklist:${decoded.jti}`);
 
-    if (!currentUser) {
-      throw createError("User does not exist", 404);
+    if (isBlacklisted) {
+      throw createError("Session expired. Please login again to continue", 401);
     }
 
-    // check if user changed password after the token was issued
-    if (
-      currentUser.passwordChangedAt &&
-      decoded.iat < currentUser.passwordChangedAt.getTime() / 1000
-    ) {
-      throw createError("Password recently changed. Please login again", 401);
-    }
-
-    // attach current user to req.user
-    req.user = {
-      id: currentUser.id,
-      email: currentUser.email,
-      role: currentUser.role!,
-      isEmailVerified: currentUser.isEmailVerified,
-      needToChangePassword: currentUser.needToChangePassword,
-      provider: currentUser.provider!,
-    };
+    req.user = { ...decoded };
     next();
   } catch (error) {
     next(error);

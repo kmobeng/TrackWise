@@ -22,9 +22,9 @@ const mockFindUniqe = prisma.user.findUnique as jest.Mock;
 const mockCreateRefreshToken = prisma.refreshToken.create as jest.Mock;
 const mockHash = bcrypt.hash as jest.Mock;
 const mockSignUpService = authService.signUpService as jest.Mock;
-const mockGenerateToken = tokenUtils.generateToken as jest.Mock;
+const mockgenerateAccessToken = tokenUtils.generateAccessToken as jest.Mock;
 const mockGenerateRefreshToken = tokenUtils.generateRefreshToken as jest.Mock;
-const mockSendToken = tokenUtils.sendToken as jest.Mock;
+const mocksendRefreshToken = tokenUtils.sendRefreshToken as jest.Mock;
 const requestEmailVerification =
   emailService.requestEmailVerificationService as jest.Mock;
 
@@ -93,13 +93,13 @@ describe("Auth Controller - Sign Up", () => {
       name: "Test User",
       email: "test@gmail.com",
     });
-    mockGenerateToken.mockReturnValue(undefined);
+    mockgenerateAccessToken.mockReturnValue(undefined);
     mockGenerateRefreshToken.mockReturnValue({
       refreshToken: "refreshToken",
       hashedToken: "hashedRefreshToken",
     });
     mockCreateRefreshToken.mockResolvedValue(undefined);
-    mockSendToken.mockReturnValue(undefined);
+    mocksendRefreshToken.mockReturnValue(undefined);
     requestEmailVerification.mockResolvedValue(undefined);
 
     await signUp(req, res, mockNext);

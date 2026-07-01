@@ -10,6 +10,9 @@ declare global {
         isEmailVerified: boolean;
         needToChangePassword: boolean;
         provider: string;
+        jti?: string;
+        iat?: number;
+        exp?: number;
       };
     }
   }

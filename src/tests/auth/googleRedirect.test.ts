@@ -22,9 +22,9 @@ const mockResponse = () => {
   return res as Response;
 };
 const mockNext = jest.fn() as jest.MockedFunction<NextFunction>;
-const mockGenerateToken = utils.generateToken as jest.Mock;
+const mockgenerateAccessToken = utils.generateAccessToken as jest.Mock;
 const mockGenerateRefreshToken = utils.generateRefreshToken as jest.Mock;
-const mockSendToken = utils.sendToken as jest.Mock;
+const mocksendRefreshToken = utils.sendRefreshToken as jest.Mock;
 const mockCreateRefreshToken = prisma.refreshToken.create as jest.Mock;
 
 describe("Auth Controller - Google Redirect", () => {
@@ -35,7 +35,7 @@ describe("Auth Controller - Google Redirect", () => {
     );
 
     const res = mockResponse();
-    mockGenerateToken.mockReturnValue(undefined);
+    mockgenerateAccessToken.mockReturnValue(undefined);
     mockGenerateRefreshToken.mockReturnValue({
       refreshToken: "refresh-token",
       hashedRefreshToken: "hashed-refresh-token",
@@ -46,11 +46,11 @@ describe("Auth Controller - Google Redirect", () => {
       userId: 1,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
-    mockSendToken.mockReturnValue(undefined);
+    mocksendRefreshToken.mockReturnValue(undefined);
 
     await googleRedirect(req, res, mockNext);
 
-    expect(mockGenerateToken).toHaveBeenCalledWith(1, req, res);
+    expect(mockgenerateAccessToken).toHaveBeenCalledWith(1, req, res);
     expect(mockGenerateRefreshToken).toHaveBeenCalled();
     expect(mockCreateRefreshToken).toHaveBeenCalledWith({
       data: {
@@ -59,7 +59,11 @@ describe("Auth Controller - Google Redirect", () => {
         expiresAt: expect.any(Date),
       },
     });
-    expect(mockSendToken).toHaveBeenCalledWith(req, res, "refresh-token");
+    expect(mocksendRefreshToken).toHaveBeenCalledWith(
+      req,
+      res,
+      "refresh-token",
+    );
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
@@ -77,7 +81,7 @@ describe("Auth Controller - Google Redirect", () => {
       { authAction: "login" },
     );
     const res = mockResponse();
-    mockGenerateToken.mockReturnValue(undefined);
+    mockgenerateAccessToken.mockReturnValue(undefined);
     mockGenerateRefreshToken.mockReturnValue({
       refreshToken: "refresh-token",
       hashedRefreshToken: "hashed-refresh-token",
@@ -88,11 +92,11 @@ describe("Auth Controller - Google Redirect", () => {
       userId: 1,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
-    mockSendToken.mockReturnValue(undefined);
+    mocksendRefreshToken.mockReturnValue(undefined);
 
     await googleRedirect(req, res, mockNext);
 
-    expect(mockGenerateToken).toHaveBeenCalledWith(1, req, res);
+    expect(mockgenerateAccessToken).toHaveBeenCalledWith(1, req, res);
     expect(mockGenerateRefreshToken).toHaveBeenCalled();
     expect(mockCreateRefreshToken).toHaveBeenCalledWith({
       data: {
@@ -101,7 +105,11 @@ describe("Auth Controller - Google Redirect", () => {
         expiresAt: expect.any(Date),
       },
     });
-    expect(mockSendToken).toHaveBeenCalledWith(req, res, "refresh-token");
+    expect(mocksendRefreshToken).toHaveBeenCalledWith(
+      req,
+      res,
+      "refresh-token",
+    );
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(

@@ -3,12 +3,14 @@ import bcrypt from "bcrypt";
 import { createError } from "../utils/error.util";
 import {
   generateRefreshToken,
-  generateToken,
-  sendToken,
+  generateAccessToken,
+  sendRefreshToken,
 } from "../utils/auth.util";
 import sendEmail from "../utils/email.util";
 import crypto from "crypto";
 import { Request, Response } from "express";
+import { JWTPayload } from "../middlewares/auth.middleware";
+import { RedisClient } from "../config/redis.config";
 
 export const signUpService = async (
   name: string,
@@ -59,7 +61,16 @@ export const refreshTokenService = async (
       throw createError("Invalid or expired refresh token", 401);
     }
 
-    generateToken(storedToken.userId, req, res);
+    const payload: JWTPayload = {
+      id: storedToken.userId,
+      isEmailVerified: storedToken.user.isEmailVerified,
+      needToChangePassword: storedToken.user.needToChangePassword,
+      role: storedToken.user.role!,
+      provider: storedToken.user.provider!,
+      email: storedToken.user.email,
+    };
+
+    generateAccessToken(payload, req, res);
 
     const {
       refreshToken: newRefreshToken,
@@ -71,7 +82,7 @@ export const refreshTokenService = async (
       data: { token: newHashedRefreshToken, expiresAt },
     });
 
-    sendToken(req, res, newRefreshToken);
+    sendRefreshToken(req, res, newRefreshToken);
   } catch (error) {
     throw error;
   }

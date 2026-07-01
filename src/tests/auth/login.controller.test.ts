@@ -26,9 +26,9 @@ const mockResponse = () => {
 const mockNext = jest.fn() as jest.MockedFunction<NextFunction>;
 
 const mockLoginService = authService.loginService as jest.Mock;
-const mockGenerateToken = utils.generateToken as jest.Mock;
+const mockgenerateAccessToken = utils.generateAccessToken as jest.Mock;
 const mockGenerateRefreshToken = utils.generateRefreshToken as jest.Mock;
-const mockSendToken = utils.sendToken as jest.Mock;
+const mocksendRefreshToken = utils.sendRefreshToken as jest.Mock;
 const mockCreateRefreshToken = prisma.refreshToken.create as jest.Mock;
 
 describe("Auth Controller - Login", () => {
@@ -62,7 +62,7 @@ describe("Auth Controller - Login", () => {
       email: "test@gmail.com",
     });
 
-    mockGenerateToken.mockReturnValue(undefined);
+    mockgenerateAccessToken.mockReturnValue(undefined);
     mockGenerateRefreshToken.mockReturnValue({
       token: "refresh-token",
       hashedToken: "hashed-refresh-token",
@@ -73,7 +73,7 @@ describe("Auth Controller - Login", () => {
       userId: 1,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
-    mockSendToken.mockReturnValue(undefined);
+    mocksendRefreshToken.mockReturnValue(undefined);
 
     await login(req, res, mockNext);
 

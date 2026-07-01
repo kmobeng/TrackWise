@@ -14,10 +14,10 @@ jest.mock("../../lib/prisma", () => ({
 jest.mock("../../utils/auth.util");
 
 const mockFindUnique = prisma.refreshToken.findUnique as jest.Mock;
-const mockGenerateToken = utils.generateToken as jest.Mock;
+const mockgenerateAccessToken = utils.generateAccessToken as jest.Mock;
 const mockGenerateRefreshToken = utils.generateRefreshToken as jest.Mock;
 const mockUpdate = prisma.refreshToken.update as jest.Mock;
-const mockSendToken = utils.sendToken as jest.Mock;
+const mocksendRefreshToken = utils.sendRefreshToken as jest.Mock;
 
 describe("Refresh Token Service", () => {
   it("should throw an error if refresh token is invalid or expired", async () => {
@@ -44,20 +44,20 @@ describe("Refresh Token Service", () => {
     const user = { id: 1, name: "Test User", email: "test@gmail.com" };
     const storedToken = {
       token: hashedRefreshToken,
-      userId :1,
+      userId: 1,
       expiresAt: new Date(Date.now() + 10000),
       user,
     };
 
     mockFindUnique.mockResolvedValue(storedToken);
-    mockGenerateToken.mockReturnValue(undefined);
+    mockgenerateAccessToken.mockReturnValue(undefined);
     mockGenerateRefreshToken.mockReturnValue({
       refreshToken: "new-refresh-token",
       hashedRefreshToken: "new-hashed-refresh-token",
     });
 
     mockUpdate.mockResolvedValue(undefined);
-    mockSendToken.mockReturnValue(undefined);
+    mocksendRefreshToken.mockReturnValue(undefined);
 
     await refreshTokenService(
       hashedRefreshToken,
@@ -70,12 +70,16 @@ describe("Refresh Token Service", () => {
       where: { token: hashedRefreshToken },
       include: { user: true },
     });
-    expect(mockGenerateToken).toHaveBeenCalledWith(user.id, req, res);
+    expect(mockgenerateAccessToken).toHaveBeenCalledWith(user.id, req, res);
     expect(mockGenerateRefreshToken).toHaveBeenCalledWith();
     expect(mockUpdate).toHaveBeenCalledWith({
       where: { token: hashedRefreshToken },
       data: { token: "new-hashed-refresh-token", expiresAt: expect.any(Date) },
     });
-    expect(mockSendToken).toHaveBeenCalledWith( req, res,"new-refresh-token");
+    expect(mocksendRefreshToken).toHaveBeenCalledWith(
+      req,
+      res,
+      "new-refresh-token",
+    );
   });
 });

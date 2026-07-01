@@ -19,13 +19,16 @@ import {
 } from "../services/auth.service";
 import {
   generateRefreshToken,
-  generateToken,
-  sendToken,
+  generateAccessToken,
+  sendRefreshToken,
 } from "../utils/auth.util";
 import crypto from "crypto";
 import sendEmail, { maskEmail } from "../utils/email.util";
 import logger from "../config/winston.config";
 import { User } from "../generated/prisma/client";
+import { JWTPayload } from "../middlewares/auth.middleware";
+import { v4 as uuidv4 } from "uuid";
+import { RedisClient } from "../config/redis.config";
 
 const expiresAt = new Date(
   Date.now() +
@@ -58,7 +61,16 @@ export const signUp = async (
 
     const newUser = await signUpService(name, email, hashedPassword);
 
-    generateToken(newUser.id, req, res);
+    const payload: JWTPayload = {
+      id: newUser.id,
+      isEmailVerified: newUser.isEmailVerified,
+      needToChangePassword: newUser.needToChangePassword,
+      role: newUser.role!,
+      provider: newUser.provider!,
+      email: newUser.email,
+    };
+
+    generateAccessToken(payload, req, res);
 
     const { refreshToken, hashedRefreshToken } = generateRefreshToken();
 
@@ -70,7 +82,7 @@ export const signUp = async (
       },
     });
 
-    sendToken(req, res, refreshToken);
+    sendRefreshToken(req, res, refreshToken);
 
     const { password: _, ...user } = newUser;
 
@@ -103,7 +115,16 @@ export const login = async (
 
     const user = await loginService(email, password);
 
-    generateToken(user.id, req, res);
+    const payload: JWTPayload = {
+      id: user.id,
+      isEmailVerified: user.isEmailVerified,
+      needToChangePassword: user.needToChangePassword,
+      role: user.role!,
+      provider: user.provider!,
+      email: user.email,
+    };
+
+    generateAccessToken(payload, req, res);
 
     const { refreshToken, hashedRefreshToken } = generateRefreshToken();
     await prisma.refreshToken.create({
@@ -114,7 +135,7 @@ export const login = async (
       },
     });
 
-    sendToken(req, res, refreshToken);
+    sendRefreshToken(req, res, refreshToken);
 
     const { password: _, ...userData } = user;
     res.status(200).json({ success: true, data: userData });
@@ -197,7 +218,7 @@ export const forgotPassword = async (
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      throw createError("User with this email does not exist", 404);
+      return res.status(200).json({ success: true });
     }
 
     const resetToken = crypto.randomBytes(32).toString("hex");
@@ -218,9 +239,7 @@ export const forgotPassword = async (
     });
 
     try {
-      const resetURL = `${req.protocol}://${req.get(
-        "host",
-      )}/api/v1/auth/reset-password/${resetToken}`;
+      const resetURL = `${process.env.CLIENT_URL}/reset-password.html?token=${resetToken}`;
 
       const message = `You requested a password reset. Please click on the following link to reset your password: ${resetURL}
        This link is valid for 10 minutes. If you did not request this, please ignore this email.`;
@@ -240,7 +259,6 @@ export const forgotPassword = async (
 
     res.status(200).json({
       success: true,
-      message: "Password reset link sent to email",
     });
   } catch (error) {
     next(error);
@@ -291,9 +309,7 @@ export const resetPassword = async (
       }),
     ]);
 
-    res
-      .status(200)
-      .json({ success: true, message: "Password reset successful" });
+    res.status(200).json({ success: true });
   } catch (error) {
     next(error);
   }
@@ -310,7 +326,16 @@ export const googleRedirect = async (
       (req.authInfo as { authAction?: "signup" | "login" } | undefined)
         ?.authAction ?? "login";
 
-    generateToken(user.id, req, res);
+    const payload: JWTPayload = {
+      id: user.id,
+      isEmailVerified: user.isEmailVerified,
+      needToChangePassword: user.needToChangePassword,
+      role: user.role!,
+      provider: user.provider!,
+      email: user.email,
+    };
+
+    generateAccessToken(payload, req, res);
 
     const { refreshToken, hashedRefreshToken } = generateRefreshToken();
     await prisma.refreshToken.create({
@@ -321,7 +346,7 @@ export const googleRedirect = async (
       },
     });
 
-    sendToken(req, res, refreshToken);
+    sendRefreshToken(req, res, refreshToken);
 
     const { password: _, ...userData } = user;
 
@@ -398,6 +423,26 @@ export const verifyEmail = async (
         where: { id: emailVerificationToken.id },
       }),
     ]);
+
+    const remainingTtl = req.user?.exp! - Math.floor(Date.now() / 1000);
+    if (remainingTtl > 0) {
+      await RedisClient.setex(
+        `blacklist:${req.user?.jti}`,
+        remainingTtl,
+        "true",
+      );
+    }
+
+    const payload: JWTPayload = {
+      id: req.user!.id,
+      isEmailVerified: true,
+      needToChangePassword: req.user!.needToChangePassword,
+      role: req.user!.role!,
+      provider: req.user!.provider!,
+      email: req.user!.email,
+    };
+
+    await generateAccessToken(payload, req, res);
 
     res
       .status(200)
