@@ -4,17 +4,22 @@ import {
   deleteMeService,
   getMeService,
   setPasswordService,
+  updateEmailService,
   updateMeService,
+  verifyEmailUpdateService,
 } from "../services/user.service";
 import {
   changePasswordSchema,
   setPasswordSchema,
+  updateEmailSchema,
   updateMeSchema,
 } from "../validators/user.validators";
 import { createError } from "../utils/error.util";
 import { emailVerificationTokenSchema } from "../validators/auth.validator";
 import crypto from "crypto";
-import { verifyEmailUpdateService } from "../services/auth.service";
+import { JWTPayload } from "../middlewares/auth.middleware";
+import { generateAccessToken } from "../utils/auth.util";
+import { RedisClient } from "../config/redis.config";
 
 export const getMe = async (
   req: Request,
@@ -46,12 +51,39 @@ export const updateMe = async (
       throw createError(errorMessage, 400);
     }
     const userId = req.user?.id;
-    const { name, email } = parsed.data;
-    const updatedUser = await updateMeService(userId!, name, email);
+    const { name } = parsed.data;
+    const updatedUser = await updateMeService(userId!, name);
 
     res.status(200).json({
       success: true,
       data: updatedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const parsed = updateEmailSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const errorMessage = parsed.error.issues[0]?.message as string;
+      throw createError(errorMessage, 400);
+    }
+
+    const userId = req.user?.id;
+    const { email, password } = parsed.data;
+
+    await updateEmailService(userId!, email, password);
+
+    res.status(200).json({
+      success: true,
+      message:
+        "If the email is valid, a verification email has been sent to your new email address. Please check your inbox and follow the instructions to verify your new email.",
     });
   } catch (error) {
     next(error);
@@ -149,6 +181,17 @@ export const setPassword = async (
 
     await setPasswordService(userId!, password, req.user?.email!);
 
+    const payload: JWTPayload = {
+      id: req.user?.id!,
+      isEmailVerified: req.user?.isEmailVerified!,
+      needToChangePassword: false,
+      role: req.user?.role!,
+      provider: req.user?.provider!,
+      email: req.user?.email!,
+    };
+
+    await generateAccessToken(payload, req, res);
+
     res.status(200).json({
       success: true,
       message: "Password set successfully",
@@ -173,7 +216,30 @@ export const verifyEmailUpdate = async (
     const { token } = parsed.data;
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    await verifyEmailUpdateService(req.user?.id!, hashedToken);
+    const updatedEmail = await verifyEmailUpdateService(
+      req.user?.id!,
+      hashedToken,
+    );
+
+    const remainingTtl = req.user?.exp! - Math.floor(Date.now() / 1000);
+    if (remainingTtl && remainingTtl > 0) {
+      await RedisClient.setex(
+        `blacklist:${req.user?.jti}`,
+        remainingTtl,
+        "true",
+      );
+    }
+
+    const payload: JWTPayload = {
+      id: req.user?.id!,
+      isEmailVerified: req.user?.isEmailVerified!,
+      needToChangePassword: req.user?.needToChangePassword!,
+      role: req.user?.role!,
+      provider: req.user?.provider!,
+      email: updatedEmail,
+    };
+
+    await generateAccessToken(payload, req, res);
 
     res.status(200).json({
       success: true,

@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { requestEmailVerificationService } from "./auth.service";
 import { createError } from "../utils/error.util";
 import sendEmail from "../utils/email.util";
+import { generateAccessToken } from "../utils/auth.util";
 
 export const getMeService = async (userId: string) => {
   try {
@@ -29,39 +30,6 @@ export const updateMeService = async (
   email?: string,
 ) => {
   try {
-    if (email) {
-      const existingUser = await prisma.user.findUnique({
-        where: {
-          email,
-        },
-      });
-      if (existingUser && existingUser.id !== userId) {
-        throw createError("Email is already in use,", 400);
-      }
-
-      await requestEmailVerificationService(userId, email);
-
-      const updatedUser = await prisma.user.update({
-        where: {
-          id: userId,
-        },
-        data: {
-          ...(name && { name }),
-          pendingEmail: email,
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          createdAt: true,
-        },
-      });
-      return {
-        ...updatedUser,
-        message: "Email change requested. Please verify your new email.",
-      };
-    }
-
     const updatedUser = await prisma.user.update({
       where: {
         id: userId,
@@ -77,6 +45,53 @@ export const updateMeService = async (
       },
     });
     return updatedUser;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateEmailService = async (
+  userId: string,
+  email: string,
+  password: string,
+) => {
+  try {
+    const actualUser = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        password: true,
+      },
+    });
+
+    if (!(await bcrypt.compare(password, actualUser?.password!))) {
+      throw createError("Password is incorrect", 400);
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (existingUser && existingUser.id !== userId) {
+      throw createError("Email is already in use,", 400);
+    }
+
+    await requestEmailVerificationService(userId, email);
+
+    await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        pendingEmail: email,
+      },
+    });
   } catch (error) {
     throw error;
   }
@@ -158,10 +173,45 @@ export const setPasswordService = async (
     });
 
     await sendEmail({
-      email, 
+      email,
       subject: "Password Set Successfully",
       message: "You have successfully set a password for your account.",
     });
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const verifyEmailUpdateService = async (
+  userId: string,
+  token: string,
+) => {
+  try {
+    const verificationToken = await prisma.emailVerificationToken.findUnique({
+      where: { token },
+    });
+
+    if (!verificationToken || verificationToken.expiresAt < new Date()) {
+      throw createError("Invalid or expired token", 400);
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { pendingEmail: true },
+    });
+    if (!user?.pendingEmail) throw createError("No pending email update", 400);
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: userId },
+        data: { email: user.pendingEmail, pendingEmail: null },
+      }),
+      prisma.emailVerificationToken.delete({
+        where: { id: verificationToken.id },
+      }),
+    ]);
+
+    return user.pendingEmail;
   } catch (error) {
     throw error;
   }
