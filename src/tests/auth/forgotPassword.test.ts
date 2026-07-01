@@ -21,6 +21,15 @@ jest.mock("../../config/winston.config", () => ({
 }));
 
 jest.mock("../../utils/email.util");
+jest.mock("../../config/redis.config", () => ({
+  RedisClient: {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(null),
+    setex: jest.fn().mockResolvedValue(null),
+    quit: jest.fn().mockResolvedValue(null),
+    on: jest.fn(),
+  },
+}));
 
 const mockRequest = (body = {}) =>
   ({
@@ -55,7 +64,7 @@ describe("Auth Controller - Forgot Password", () => {
     );
   });
 
-  it("should return 404 if user with email does not exist", async () => {
+  it("should return 200 if user with email does not exist", async () => {
     const req = mockRequest({
       email: "nonexistent@gmail.com",
     });
@@ -65,9 +74,10 @@ describe("Auth Controller - Forgot Password", () => {
 
     await forgotPassword(req, res, mockNext);
 
-    expect(mockNext).toHaveBeenCalledWith(
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        statusCode: 404,
+        success: true,
       }),
     );
   });

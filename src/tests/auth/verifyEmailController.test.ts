@@ -1,6 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../../lib/prisma";
 import { verifyEmail } from "../../controllers/auth.controller";
+import { generateAccessToken } from "../../utils/auth.util";
+
+jest.mock("../../utils/auth.util", () => ({
+  generateAccessToken: jest.fn(),
+}));
+
+jest.mock("../../config/redis.config", () => ({
+  RedisClient: {
+    setex: jest.fn().mockResolvedValue(null),
+  },
+}));
 
 jest.mock("../../lib/prisma", () => ({
   prisma: {
@@ -15,7 +26,20 @@ jest.mock("../../lib/prisma", () => ({
   },
 }));
 
-const mockRequest = (body = {}) => ({ body }) as Request;
+const mockRequest = (body = {}) =>
+  ({
+    body,
+    user: {
+      id: "user-id",
+      email: "test@gmail.com",
+      role: "user",
+      provider: "local",
+      isEmailVerified: false,
+      needToChangePassword: false,
+      jti: "jti-1",
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    },
+  }) as unknown as Request;
 const mockResponse = () => {
   const res: any = {};
   res.status = jest.fn().mockReturnValue(res);
@@ -27,8 +51,13 @@ const mockFindUnique = prisma.emailVerificationToken.findUnique as jest.Mock;
 const mockDelete = prisma.emailVerificationToken.delete as jest.Mock;
 const mockUserUpdate = prisma.user.update as jest.Mock;
 const mockTransaction = prisma.$transaction as jest.Mock;
+const mockGenerateAccessToken = generateAccessToken as jest.Mock;
 
 describe("Verify Email Controller", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it("should return 400 if validation fails", async () => {
     const req = mockRequest({ token: "" });
     const res = mockResponse();
@@ -81,6 +110,7 @@ describe("Verify Email Controller", () => {
     expect(mockDelete).toHaveBeenCalledWith({
       where: { id: "token-id" },
     });
+    expect(mockGenerateAccessToken).toHaveBeenCalled();
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(

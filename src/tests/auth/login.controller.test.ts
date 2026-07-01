@@ -12,6 +12,15 @@ jest.mock("../../lib/prisma", () => ({
 
 jest.mock("../../services/auth.service");
 jest.mock("../../utils/auth.util");
+jest.mock("../../config/redis.config", () => ({
+  RedisClient: {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(null),
+    setex: jest.fn().mockResolvedValue(null),
+    quit: jest.fn().mockResolvedValue(null),
+    on: jest.fn(),
+  },
+}));
 
 const mockRequest = (body = {}) => ({ body }) as unknown as Request;
 

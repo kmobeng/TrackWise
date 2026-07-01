@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-import { verifyEmailUpdateService } from "../../services/auth.service";
+import { verifyEmailUpdateService } from "../../services/user.service";
 
 jest.mock("../../lib/prisma", () => ({
   prisma: {
@@ -60,7 +60,7 @@ describe("Verify Email Update Service", () => {
 
     await expect(
       verifyEmailUpdateService("user-id", "valid-token"),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe("test@gmail.com");
 
     expect(mockFindUnique).toHaveBeenCalledWith({
       where: { token: "valid-token" },

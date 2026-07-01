@@ -12,6 +12,15 @@ jest.mock("../../lib/prisma", () => ({
 }));
 
 jest.mock("../../utils/auth.util");
+jest.mock("../../config/redis.config", () => ({
+  RedisClient: {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(null),
+    setex: jest.fn().mockResolvedValue(null),
+    quit: jest.fn().mockResolvedValue(null),
+    on: jest.fn(),
+  },
+}));
 
 const mockRequest = (user = {}, authInfo = {}) =>
   ({ user, authInfo }) as unknown as Request;
@@ -30,7 +39,14 @@ const mockCreateRefreshToken = prisma.refreshToken.create as jest.Mock;
 describe("Auth Controller - Google Redirect", () => {
   it("should return 200 if google redirect is successful for signup", async () => {
     const req = mockRequest(
-      { id: 1, email: "test@gmail.com" },
+      {
+        id: 1,
+        email: "test@gmail.com",
+        isEmailVerified: true,
+        needToChangePassword: false,
+        role: "user",
+        provider: "google",
+      },
       { authAction: "signup" },
     );
 
@@ -50,7 +66,18 @@ describe("Auth Controller - Google Redirect", () => {
 
     await googleRedirect(req, res, mockNext);
 
-    expect(mockgenerateAccessToken).toHaveBeenCalledWith(1, req, res);
+    expect(mockgenerateAccessToken).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 1,
+        email: "test@gmail.com",
+        isEmailVerified: true,
+        needToChangePassword: false,
+        role: "user",
+        provider: "google",
+      }),
+      req,
+      res,
+    );
     expect(mockGenerateRefreshToken).toHaveBeenCalled();
     expect(mockCreateRefreshToken).toHaveBeenCalledWith({
       data: {
@@ -77,7 +104,14 @@ describe("Auth Controller - Google Redirect", () => {
 
   it("should return 200 if google redirect is successful for login", async () => {
     const req = mockRequest(
-      { id: 1, email: "test@gmail.com" },
+      {
+        id: 1,
+        email: "test@gmail.com",
+        isEmailVerified: true,
+        needToChangePassword: false,
+        role: "user",
+        provider: "google",
+      },
       { authAction: "login" },
     );
     const res = mockResponse();
@@ -96,7 +130,18 @@ describe("Auth Controller - Google Redirect", () => {
 
     await googleRedirect(req, res, mockNext);
 
-    expect(mockgenerateAccessToken).toHaveBeenCalledWith(1, req, res);
+    expect(mockgenerateAccessToken).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 1,
+        email: "test@gmail.com",
+        isEmailVerified: true,
+        needToChangePassword: false,
+        role: "user",
+        provider: "google",
+      }),
+      req,
+      res,
+    );
     expect(mockGenerateRefreshToken).toHaveBeenCalled();
     expect(mockCreateRefreshToken).toHaveBeenCalledWith({
       data: {

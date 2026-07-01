@@ -83,7 +83,7 @@ describe("Auth Integration - Password Reset", () => {
 
     const sendEmailMock = sendEmail as jest.Mock;
     const message = sendEmailMock.mock.calls[0][0].message as string;
-    const match = message.match(/reset-password\/([a-f0-9]+)/i);
+    const match = message.match(/[?&]token=([a-f0-9]+)/i);
     expect(match).not.toBeNull();
 
     const rawToken = match![1];

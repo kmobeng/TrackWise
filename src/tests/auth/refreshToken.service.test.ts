@@ -41,7 +41,15 @@ describe("Refresh Token Service", () => {
     const req = {} as Request;
     const res = {} as Response;
 
-    const user = { id: 1, name: "Test User", email: "test@gmail.com" };
+    const user = {
+      id: 1,
+      name: "Test User",
+      email: "test@gmail.com",
+      isEmailVerified: true,
+      needToChangePassword: false,
+      role: "user",
+      provider: "local",
+    };
     const storedToken = {
       token: hashedRefreshToken,
       userId: 1,
@@ -70,7 +78,18 @@ describe("Refresh Token Service", () => {
       where: { token: hashedRefreshToken },
       include: { user: true },
     });
-    expect(mockgenerateAccessToken).toHaveBeenCalledWith(user.id, req, res);
+    expect(mockgenerateAccessToken).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: user.id,
+        email: user.email,
+        isEmailVerified: true,
+        needToChangePassword: false,
+        role: "user",
+        provider: "local",
+      }),
+      req,
+      res,
+    );
     expect(mockGenerateRefreshToken).toHaveBeenCalledWith();
     expect(mockUpdate).toHaveBeenCalledWith({
       where: { token: hashedRefreshToken },

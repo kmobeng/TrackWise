@@ -4,6 +4,15 @@ import { requestEmailVerification } from "../../controllers/auth.controller";
 import { success } from "zod";
 
 jest.mock("../../services/auth.service");
+jest.mock("../../config/redis.config", () => ({
+  RedisClient: {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(null),
+    setex: jest.fn().mockResolvedValue(null),
+    quit: jest.fn().mockResolvedValue(null),
+    on: jest.fn(),
+  },
+}));
 
 const mockRequest = (user = {}) => ({ user }) as unknown as Request;
 const mockResponse = () => {

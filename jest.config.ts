@@ -3,7 +3,7 @@
  * https://jestjs.io/docs/configuration
  */
 
-import type {Config} from 'jest';
+import type { Config } from "jest";
 
 const config: Config = {
   // All imported modules in your tests should be mocked automatically
@@ -201,6 +201,9 @@ const config: Config = {
   testEnvironment: "node",
   transform: {
     "^.+\\.ts$": "ts-jest",
+  },
+  moduleNameMapper: {
+    "^uuid$": "<rootDir>/src/tests/mocks/uuid.ts",
   },
 };
 

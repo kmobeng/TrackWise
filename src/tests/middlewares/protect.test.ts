@@ -1,20 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { protect } from "../../middlewares/auth.middleware";
-import { prisma } from "../../lib/prisma";
+import { RedisClient } from "../../config/redis.config";
 
-jest.mock("../../lib/prisma", () => ({
-  prisma: {
-    user: {
-      findUnique: jest.fn(),
-    },
+jest.mock("../../config/redis.config", () => ({
+  RedisClient: {
+    get: jest.fn(),
   },
 }));
 
 jest.mock("jsonwebtoken");
 
-const mockFindUnique = prisma.user.findUnique as jest.Mock;
 const mockJwtVerify = jwt.verify as jest.Mock;
+const mockRedisGet = RedisClient.get as jest.Mock;
 
 const mockRequest = (cookies = {}) => ({ cookies }) as unknown as Request;
 
@@ -23,6 +21,11 @@ const mockResponse = () => ({}) as unknown as Response;
 const mockNext = jest.fn() as jest.MockedFunction<NextFunction>;
 
 describe("protect middleware", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockRedisGet.mockResolvedValue(null);
+  });
+
   it("should call next with 401 error if no token in cookies", async () => {
     const req = mockRequest({}); // no accessToken
     const res = mockResponse();
@@ -49,30 +52,17 @@ describe("protect middleware", () => {
     );
   });
 
-  it("should call next with 404 if user does not exist in DB", async () => {
+  it("should call next with 401 if token is blacklisted", async () => {
     const req = mockRequest({ accessToken: "validtoken" });
     const res = mockResponse();
 
-    mockJwtVerify.mockReturnValue({ id: "user-123", iat: 0, exp: 0 });
-    mockFindUnique.mockResolvedValue(null); // user not found
-
-    await protect(req, res, mockNext);
-
-    expect(mockNext).toHaveBeenCalledWith(
-      expect.objectContaining({ statusCode: 404 }),
-    );
-  });
-
-  it("should call next with 401 if password changed after token issued", async () => {
-    const req = mockRequest({ accessToken: "validtoken" });
-    const res = mockResponse();
-
-    mockJwtVerify.mockReturnValue({ id: "user-123", iat: 1000, exp: 0 });
-    mockFindUnique.mockResolvedValue({
+    mockJwtVerify.mockReturnValue({
       id: "user-123",
-      email: "test@gmail.com",
-      passwordChangedAt: new Date(999999999), // password changed after token issued
+      jti: "jti-1",
+      iat: 0,
+      exp: 0,
     });
+    mockRedisGet.mockResolvedValue("true");
 
     await protect(req, res, mockNext);
 
@@ -81,19 +71,20 @@ describe("protect middleware", () => {
     );
   });
 
-  it("should attach user to req and call next if token is valid and user exists", async () => {
+  it("should attach decoded payload to req.user and call next if token is valid", async () => {
     const req = mockRequest({ accessToken: "validtoken" });
     const res = mockResponse();
 
-    mockJwtVerify.mockReturnValue({ id: "user-123", iat: 0, exp: 0 });
-    mockFindUnique.mockResolvedValue({
+    mockJwtVerify.mockReturnValue({
       id: "user-123",
       email: "test@gmail.com",
       role: "user",
       isEmailVerified: true,
       needToChangePassword: false,
       provider: "local",
-      passwordChangedAt: null,
+      jti: "jti-2",
+      iat: 0,
+      exp: 999999,
     });
 
     await protect(req, res, mockNext);
@@ -105,6 +96,7 @@ describe("protect middleware", () => {
       isEmailVerified: true,
       needToChangePassword: false,
       provider: "local",
+      jti: "jti-2",
     });
     expect(mockNext).toHaveBeenCalledWith();
   });

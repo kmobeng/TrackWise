@@ -27,6 +27,16 @@ const mockResponse = () => {
 };
 const mockNext = jest.fn() as jest.MockedFunction<NextFunction>;
 
+jest.mock("../../config/redis.config", () => ({
+  RedisClient: {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(null),
+    setex: jest.fn().mockResolvedValue(null),
+    quit: jest.fn().mockResolvedValue(null),
+    on: jest.fn(),
+  },
+}));
+
 const mockFindUnique = prisma.passwordResetToken.findUnique as jest.Mock;
 const mockTransaction = prisma.$transaction as jest.Mock;
 const mockHash = bcrypt.hash as jest.Mock;

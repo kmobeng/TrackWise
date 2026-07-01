@@ -17,6 +17,15 @@ jest.mock("bcrypt");
 jest.mock("../../services/auth.service");
 jest.mock("../../utils/auth.util");
 jest.mock("../../services/auth.service");
+jest.mock("../../config/redis.config", () => ({
+  RedisClient: {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(null),
+    setex: jest.fn().mockResolvedValue(null),
+    quit: jest.fn().mockResolvedValue(null),
+    on: jest.fn(),
+  },
+}));
 
 const mockFindUniqe = prisma.user.findUnique as jest.Mock;
 const mockCreateRefreshToken = prisma.refreshToken.create as jest.Mock;

@@ -98,9 +98,20 @@ describe("Budget Integration - Category Allocation", () => {
       },
     });
 
-    accessToken = jwt.sign({ id: userId }, process.env.JWT_SECRET!, {
-      expiresIn: "15m",
-    });
+    accessToken = jwt.sign(
+      {
+        id: userId,
+        email: TEST_EMAIL,
+        role: "user",
+        provider: "local",
+        isEmailVerified: true,
+        needToChangePassword: false,
+      },
+      process.env.JWT_SECRET!,
+      {
+        expiresIn: "15m",
+      },
+    );
   });
 
   afterAll(async () => {

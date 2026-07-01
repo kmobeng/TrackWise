@@ -3,6 +3,15 @@ import * as authService from "../../services/auth.service";
 import { logout } from "../../controllers/auth.controller";
 
 jest.mock("../../services/auth.service");
+jest.mock("../../config/redis.config", () => ({
+  RedisClient: {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(null),
+    setex: jest.fn().mockResolvedValue(null),
+    quit: jest.fn().mockResolvedValue(null),
+    on: jest.fn(),
+  },
+}));
 
 const mockRequest = (cookies = {}) =>
   ({
