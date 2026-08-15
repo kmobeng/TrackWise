@@ -154,6 +154,7 @@ See .env.example for the full list and defaults. Current variables used by the a
 
 - NODE_ENV: development or production
 - PORT: HTTP port for the API server
+- CLIENT_URL: Frontend origin (used for CORS and password-reset links)
 - DATABASE_URL: PostgreSQL connection string
 - REDIS_URL: Redis connection string
 - COOKIE_KEY: Cookie session encryption key
@@ -164,7 +165,8 @@ See .env.example for the full list and defaults. Current variables used by the a
 - GOOGLE_CLIENT_ID: Google OAuth client ID
 - GOOGLE_CLIENT_SECRET: Google OAuth client secret
 - GROQ_API_KEY: Groq API key for AI summaries
-- EMAIL_FROM: From address for outbound emails
+- SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/SMTP_SECURE: SMTP transport for outbound email (Resend-compatible)
+- EMAIL_FROM: From address for outbound emails (must use a Resend-verified domain)
 
 ## Notes
 
@@ -172,4 +174,4 @@ See .env.example for the full list and defaults. Current variables used by the a
 - Protected routes require a verified email and a set password.
 - AI summaries are only available for completed months.
 - Default categories are cached and seeded from prisma/seed.ts.
-- Email delivery uses a local SMTP server on localhost:1025 (see src/utils/email.util.ts).
+- Email delivery is configured via the SMTP_* environment variables (defaults point at Resend's SMTP; see src/utils/email.util.ts).
