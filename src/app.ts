@@ -16,6 +16,7 @@ import { setupSwagger } from "./config/swagger.config";
 
 const app: Application = express();
 
+app.set("trust proxy", 1);
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 
 app.use(httpLogger);
@@ -34,6 +35,10 @@ app.use(apiLimiter); // apply rate limiter to all requests
 
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "API is running" });
+});
+
+app.get("/healthz", (req: Request, res: Response) => {
+  res.status(200).json({ status: "ok" });
 });
 
 app.use(passport.initialize());
