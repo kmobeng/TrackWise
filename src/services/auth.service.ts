@@ -10,7 +10,6 @@ import sendEmail from "../utils/email.util";
 import crypto from "crypto";
 import { Request, Response } from "express";
 import { JWTPayload } from "../middlewares/auth.middleware";
-import { RedisClient } from "../config/redis.config";
 
 export const signUpService = async (
   name: string,

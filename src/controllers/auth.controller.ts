@@ -27,7 +27,6 @@ import sendEmail, { maskEmail } from "../utils/email.util";
 import logger from "../config/winston.config";
 import { User } from "../generated/prisma/client";
 import { JWTPayload } from "../middlewares/auth.middleware";
-import { v4 as uuidv4 } from "uuid";
 import { RedisClient } from "../config/redis.config";
 
 const expiresAt = new Date(

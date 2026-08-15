@@ -3,7 +3,6 @@ import bcrypt from "bcrypt";
 import { requestEmailVerificationService } from "./auth.service";
 import { createError } from "../utils/error.util";
 import sendEmail from "../utils/email.util";
-import { generateAccessToken } from "../utils/auth.util";
 
 export const getMeService = async (userId: string) => {
   try {
