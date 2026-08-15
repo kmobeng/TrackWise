@@ -16,7 +16,7 @@ const setAccessTokenCookieOptions = () => {
   };
 
   if (process.env.NODE_ENV === "production") {
-    ((cookieOptions.secure = true), (cookieOptions.sameSite = "strict"));
+    ((cookieOptions.secure = true), (cookieOptions.sameSite = "none"));
   }
   return cookieOptions;
 };
@@ -34,7 +34,7 @@ export const setRefreshTokenCookieOptions = () => {
 
   if (process.env.NODE_ENV === "production") {
     ((RefreshCookieOptions.secure = true),
-      (RefreshCookieOptions.sameSite = "strict"));
+      (RefreshCookieOptions.sameSite = "none"));
   }
 
   return RefreshCookieOptions;

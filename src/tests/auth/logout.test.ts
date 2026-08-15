@@ -53,12 +53,12 @@ describe("Auth Controller - Logout", () => {
     expect(res.clearCookie).toHaveBeenCalledWith("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "none",
     });
     expect(res.clearCookie).toHaveBeenCalledWith("accessToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "none",
     });
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(

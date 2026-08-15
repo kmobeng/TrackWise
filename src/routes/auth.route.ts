@@ -32,7 +32,7 @@ authRouter.get(
 authRouter.get(
   "/google/redirect",
   passport.authenticate("google", {
-    failureRedirect: "/api/auth/login",
+    failureRedirect: `${process.env.CLIENT_URL}/login`,
     session: false,
   }),
   googleRedirect,

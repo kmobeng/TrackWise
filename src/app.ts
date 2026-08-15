@@ -13,6 +13,7 @@ import passport from "passport";
 import "./config/passport.config";
 import userRouter from "./routes/user.routes";
 import { setupSwagger } from "./config/swagger.config";
+import { csrfProtection } from "./middlewares/csrf.middleware";
 
 const app: Application = express();
 
@@ -23,6 +24,8 @@ app.use(httpLogger);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true, limit: "50kb" }));
 app.use(cookieParser());
+
+app.use(csrfProtection);
 
 app.use(
   cookieSession({

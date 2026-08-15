@@ -186,13 +186,13 @@ export const logout = async (
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "none",
     });
 
     res.clearCookie("accessToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "none",
     });
 
     const remainingTtl = req.user?.exp! - Math.floor(Date.now() / 1000);
@@ -327,9 +327,6 @@ export const googleRedirect = async (
 ) => {
   try {
     const user = req.user as User;
-    const authAction =
-      (req.authInfo as { authAction?: "signup" | "login" } | undefined)
-        ?.authAction ?? "login";
 
     const payload: JWTPayload = {
       id: user.id,
@@ -353,16 +350,11 @@ export const googleRedirect = async (
 
     sendRefreshToken(req, res, refreshToken);
 
-    const { password: _, ...userData } = user;
+    if (user.needToChangePassword) {
+      return res.redirect(`${process.env.CLIENT_URL}/set-password`);
+    }
 
-    res.status(200).json({
-      success: true,
-      message:
-        authAction === "signup"
-          ? "Account created with Google. Please set password to continue."
-          : "Logged in with Google successfully.",
-      data: { user: userData },
-    });
+    res.redirect(`${process.env.CLIENT_URL}/app`);
   } catch (error) {
     next(error);
   }

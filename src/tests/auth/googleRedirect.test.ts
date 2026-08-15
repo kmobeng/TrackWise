@@ -28,6 +28,7 @@ const mockResponse = () => {
   const res: any = {};
   res.status = jest.fn().mockReturnValue(res);
   res.json = jest.fn().mockReturnValue(res);
+  res.redirect = jest.fn().mockReturnValue(res);
   return res as Response;
 };
 const mockNext = jest.fn() as jest.MockedFunction<NextFunction>;
@@ -36,14 +37,18 @@ const mockGenerateRefreshToken = utils.generateRefreshToken as jest.Mock;
 const mocksendRefreshToken = utils.sendRefreshToken as jest.Mock;
 const mockCreateRefreshToken = prisma.refreshToken.create as jest.Mock;
 
+const CLIENT_URL = "https://trackwise-gh.vercel.app";
+
 describe("Auth Controller - Google Redirect", () => {
-  it("should return 200 if google redirect is successful for signup", async () => {
+  it("should redirect to the set-password page when the user still needs to set a password", async () => {
+    process.env.CLIENT_URL = CLIENT_URL;
+
     const req = mockRequest(
       {
         id: 1,
         email: "test@gmail.com",
         isEmailVerified: true,
-        needToChangePassword: false,
+        needToChangePassword: true,
         role: "user",
         provider: "google",
       },
@@ -71,7 +76,7 @@ describe("Auth Controller - Google Redirect", () => {
         id: 1,
         email: "test@gmail.com",
         isEmailVerified: true,
-        needToChangePassword: false,
+        needToChangePassword: true,
         role: "user",
         provider: "google",
       }),
@@ -92,17 +97,12 @@ describe("Auth Controller - Google Redirect", () => {
       "refresh-token",
     );
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: true,
-        message:
-          "Account created with Google. Please set password to continue.",
-      }),
-    );
+    expect(res.redirect).toHaveBeenCalledWith(`${CLIENT_URL}/set-password`);
   });
 
-  it("should return 200 if google redirect is successful for login", async () => {
+  it("should redirect to the app dashboard when the user has a password set", async () => {
+    process.env.CLIENT_URL = CLIENT_URL;
+
     const req = mockRequest(
       {
         id: 1,
@@ -156,12 +156,6 @@ describe("Auth Controller - Google Redirect", () => {
       "refresh-token",
     );
 
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success: true,
-        message: "Logged in with Google successfully.",
-      }),
-    );
+    expect(res.redirect).toHaveBeenCalledWith(`${CLIENT_URL}/app`);
   });
 });
