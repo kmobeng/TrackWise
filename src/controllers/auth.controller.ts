@@ -243,7 +243,7 @@ export const forgotPassword = async (
       },
     });
 
-    const resetURL = `${process.env.CLIENT_URL}/reset-password.html?token=${resetToken}`;
+    const resetURL = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
 
     const message = `You requested a password reset. Please click on the following link to reset your password: ${resetURL}
      This link is valid for 10 minutes. If you did not request this, please ignore this email.`;
