@@ -1,24 +1,39 @@
 import nodemailer from "nodemailer";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
+import { Resend } from "resend";
+import logger from "../config/winston.config";
 
 const sendEmail = async (options: any) => {
-  if (!process.env.SMTP_HOST) {
-    throw new Error("SMTP_HOST is missing");
-  }
   if (!process.env.EMAIL_FROM) {
     throw new Error("EMAIL_FROM is missing");
   }
 
+  if (process.env.NODE_ENV === "production") {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
+    const from = process.env.RESEND_EMAIL_FROM as string;
+
+    const result = await resend.emails.send({
+      from,
+      to: options.email,
+      subject: options.subject,
+      text: options.message,
+      html: options.html,
+      attachments: options.attachments,
+    });
+
+    if (result.error) {
+      logger.error("Resend error:", result.error);
+      throw new Error("Email failed to send");
+    }
+
+    return result;
+  }
+
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: process.env.SMTP_SECURE === "true",
-    auth: process.env.SMTP_USER
-      ? {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        }
-      : undefined,
+    host: "localhost",
+    port: 1025,
+    secure: false,
   } as SMTPTransport.Options);
 
   const mailOptions = {
@@ -26,6 +41,8 @@ const sendEmail = async (options: any) => {
     to: options.email,
     subject: options.subject,
     text: options.message,
+    html: options.html,
+    attachments: options.attachments,
   };
 
   await transporter.sendMail(mailOptions);
