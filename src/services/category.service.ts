@@ -15,6 +15,10 @@ export const getDefaultCategoriesCached = async () => {
     select: { id: true, name: true },
   });
 
+  if (categories.length === 0) {
+    return categories;
+  }
+
   await RedisClient.setex(DEFAULT_CATEGORIES_CACHE_KEY,86400, JSON.stringify(categories));
   return categories;
 };

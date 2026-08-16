@@ -302,6 +302,13 @@ export const autoCategorizeExpense = async (
       categories.find((c) => c.name === result.category) ||
       categories.find((c) => c.isDefault && c.name === "Other");
 
+    if (!category) {
+      throw createError(
+        "Could not determine a category for this expense. Please categorize it manually.",
+        400,
+      );
+    }
+
     res.status(200).json({
       success: true,
       data: {
@@ -309,8 +316,8 @@ export const autoCategorizeExpense = async (
         description: result.description,
         date: result.date,
         category: {
-          id: category!.id,
-          name: category!.name,
+          id: category.id,
+          name: category.name,
         },
       },
     });
