@@ -17,6 +17,7 @@ const defaultCategories = [
   { name: "Education", isDefault: true },
   { name: "Utilities", isDefault: true },
   { name: "Savings", isDefault: true },
+  {name: "Groceries", isDefault: true},
   { name: "Other", isDefault: true },
 ];
 
