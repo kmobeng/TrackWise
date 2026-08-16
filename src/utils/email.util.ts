@@ -4,10 +4,6 @@ import { Resend } from "resend";
 import logger from "../config/winston.config";
 
 const sendEmail = async (options: any) => {
-  if (!process.env.EMAIL_FROM) {
-    throw new Error("EMAIL_FROM is missing");
-  }
-
   if (process.env.NODE_ENV === "production") {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -28,6 +24,10 @@ const sendEmail = async (options: any) => {
     }
 
     return result;
+  }
+
+  if (!process.env.EMAIL_FROM) {
+    throw new Error("EMAIL_FROM is missing");
   }
 
   const transporter = nodemailer.createTransport({
