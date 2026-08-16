@@ -2,7 +2,7 @@ import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt";
 import { requestEmailVerificationService } from "./auth.service";
 import { createError } from "../utils/error.util";
-import sendEmail from "../utils/email.util";
+import { sendEmailToQueue } from "../queues/email.queue";
 
 export const getMeService = async (userId: string) => {
   try {
@@ -151,7 +151,7 @@ export const changePasswordService = async (
       }),
     ]);
 
-    await sendEmail({
+    await sendEmailToQueue({
       email: user.email,
       subject: "Password Changed",
       message:
@@ -179,7 +179,7 @@ export const setPasswordService = async (
       },
     });
 
-    await sendEmail({
+    await sendEmailToQueue({
       email,
       subject: "Password Set Successfully",
       message: "You have successfully set a password for your account.",

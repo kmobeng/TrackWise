@@ -23,8 +23,8 @@ import {
   sendRefreshToken,
 } from "../utils/auth.util";
 import crypto from "crypto";
-import sendEmail, { maskEmail } from "../utils/email.util";
-import logger from "../config/winston.config";
+import { maskEmail } from "../utils/email.util";
+import { sendEmailToQueue } from "../queues/email.queue";
 import { User } from "../generated/prisma/client";
 import { JWTPayload } from "../middlewares/auth.middleware";
 import { RedisClient } from "../config/redis.config";
@@ -243,24 +243,15 @@ export const forgotPassword = async (
       },
     });
 
-    try {
-      const resetURL = `${process.env.CLIENT_URL}/reset-password.html?token=${resetToken}`;
+    const resetURL = `${process.env.CLIENT_URL}/reset-password.html?token=${resetToken}`;
 
-      const message = `You requested a password reset. Please click on the following link to reset your password: ${resetURL}
-       This link is valid for 10 minutes. If you did not request this, please ignore this email.`;
-      await sendEmail({
-        email: user.email,
-        subject: "Password Reset Request",
-        message,
-      });
-    } catch (error) {
-      logger.error("Error sending email:", error);
-      await prisma.passwordResetToken.delete({ where: { userId: user.id } });
-      throw createError(
-        "There was an error sending the email. Please try again later.",
-        500,
-      );
-    }
+    const message = `You requested a password reset. Please click on the following link to reset your password: ${resetURL}
+     This link is valid for 10 minutes. If you did not request this, please ignore this email.`;
+    await sendEmailToQueue({
+      email: user.email,
+      subject: "Password Reset Request",
+      message,
+    });
 
     res.status(200).json({
       success: true,

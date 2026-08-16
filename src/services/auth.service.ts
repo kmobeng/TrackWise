@@ -6,7 +6,7 @@ import {
   generateAccessToken,
   sendRefreshToken,
 } from "../utils/auth.util";
-import sendEmail from "../utils/email.util";
+import { sendEmailToQueue } from "../queues/email.queue";
 import crypto from "crypto";
 import { Request, Response } from "express";
 import { JWTPayload } from "../middlewares/auth.middleware";
@@ -119,22 +119,12 @@ export const requestEmailVerificationService = async (
       },
     });
 
-    try {
-      const message = `Your email verification code is: ${token}. This code is valid for 10 minutes. If you did not request this, please ignore this email.`;
-      await sendEmail({
-        email,
-        subject: "Email Verification Code",
-        message,
-      });
-    } catch (error) {
-      await prisma.emailVerificationToken.delete({
-        where: { userId },
-      });
-      throw createError(
-        "There was an error sending the email. Please try again later.",
-        500,
-      );
-    }
+    const message = `Your email verification code is: ${token}. This code is valid for 10 minutes. If you did not request this, please ignore this email.`;
+    await sendEmailToQueue({
+      email,
+      subject: "Email Verification Code",
+      message,
+    });
   } catch (error) {
     throw error;
   }

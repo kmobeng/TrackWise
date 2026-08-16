@@ -1,6 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import { requestEmailVerificationService } from "../../services/auth.service";
-import sendEmail from "../../utils/email.util";
+import { sendEmailToQueue } from "../../queues/email.queue";
 
 jest.mock("../../lib/prisma", () => ({
   prisma: {
@@ -11,30 +11,36 @@ jest.mock("../../lib/prisma", () => ({
   },
 }));
 
-jest.mock("../../utils/email.util");
+jest.mock("../../queues/email.queue");
+jest.mock("../../config/redis.config", () => ({
+  RedisClient: {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(null),
+    setex: jest.fn().mockResolvedValue(null),
+    quit: jest.fn().mockResolvedValue(null),
+    on: jest.fn(),
+  },
+}));
+
 const mockupsert = prisma.emailVerificationToken.upsert as jest.Mock;
 const mockDelete = prisma.emailVerificationToken.delete as jest.Mock;
-const mockSendEmail = sendEmail as jest.Mock;
+const mockSendEmailToQueue = sendEmailToQueue as jest.Mock;
 
 describe("Auth Service - Request Email Verification", () => {
-  it("should return 500 if sending emails fail", async () => {
+  it("should throw if enqueueing the email fails", async () => {
     mockupsert.mockResolvedValue({});
-    mockSendEmail.mockRejectedValue(
-      new Error("There was an error sending the email. Please try again later"),
-    );
+    mockSendEmailToQueue.mockRejectedValue(new Error("Enqueue failed"));
 
     await expect(
       requestEmailVerificationService("1", "test@gmail.com"),
-    ).rejects.toThrow(
-      "There was an error sending the email. Please try again later",
-    );
+    ).rejects.toThrow("Enqueue failed");
 
-    expect(mockDelete).toHaveBeenCalledWith({ where: { userId: "1" } });
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 
-  it("should resolve successfully if email is sent", async () => {
+  it("should resolve successfully if the email is enqueued", async () => {
     mockupsert.mockResolvedValue({});
-    mockSendEmail.mockResolvedValue(undefined);
+    mockSendEmailToQueue.mockResolvedValue(undefined);
 
     const results = await requestEmailVerificationService(
       "1",
@@ -42,5 +48,13 @@ describe("Auth Service - Request Email Verification", () => {
     );
 
     expect(results).toBeUndefined();
+
+    expect(mockSendEmailToQueue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "test@gmail.com",
+        subject: "Email Verification Code",
+      }),
+    );
+    expect(mockDelete).not.toHaveBeenCalled();
   });
 });

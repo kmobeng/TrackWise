@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import { forgotPassword } from "../../controllers/auth.controller";
 import { Request, Response, NextFunction } from "express";
-import * as utils from "../../utils/email.util";
+import { sendEmailToQueue } from "../../queues/email.queue";
 import logger from "../../config/winston.config";
 
 jest.mock("../../lib/prisma", () => ({
@@ -20,7 +20,7 @@ jest.mock("../../config/winston.config", () => ({
   error: jest.fn(),
 }));
 
-jest.mock("../../utils/email.util");
+jest.mock("../../queues/email.queue");
 jest.mock("../../config/redis.config", () => ({
   RedisClient: {
     get: jest.fn().mockResolvedValue(null),
@@ -46,7 +46,7 @@ const mockResponse = () => {
 const mockNext = jest.fn() as jest.MockedFunction<NextFunction>;
 const mockFindUnique = prisma.user.findUnique as jest.Mock;
 const mockUpsert = prisma.passwordResetToken.upsert as jest.Mock;
-const mockSendEmail = utils.default as jest.Mock;
+const mockSendEmailToQueue = sendEmailToQueue as jest.Mock;
 
 describe("Auth Controller - Forgot Password", () => {
   it("should return 400 if body validation fails", async () => {
@@ -82,7 +82,7 @@ describe("Auth Controller - Forgot Password", () => {
     );
   });
 
-  it("should return 500 if there is an error sending email", async () => {
+  it("should return 500 if there is an error enqueueing the email", async () => {
     const req = mockRequest({
       email: "test@gmail.com",
     });
@@ -90,23 +90,20 @@ describe("Auth Controller - Forgot Password", () => {
 
     mockFindUnique.mockResolvedValue({ id: 1, email: "test@gmail.com" });
     mockUpsert.mockResolvedValue({});
-
-    mockSendEmail.mockRejectedValue(new Error("Email sending failed"));
+    mockSendEmailToQueue.mockRejectedValue(new Error("Enqueue failed"));
 
     await forgotPassword(req, res, mockNext);
 
     expect(mockNext).toHaveBeenCalledWith(
       expect.objectContaining({
-        statusCode: 500,
+        message: "Enqueue failed",
       }),
     );
 
-    expect(prisma.passwordResetToken.delete).toHaveBeenCalledWith({
-      where: { userId: 1 },
-    });
+    expect(prisma.passwordResetToken.delete).not.toHaveBeenCalled();
   });
 
-  it("should return 200 if forgot password is successful", async () => {
+  it("should return 200 and enqueue the email if forgot password is successful", async () => {
     const req = mockRequest({
       email: "test@gmail.com",
     });
@@ -114,7 +111,7 @@ describe("Auth Controller - Forgot Password", () => {
 
     mockFindUnique.mockResolvedValue({ id: 1, email: "test@gmail.com" });
     mockUpsert.mockResolvedValue({});
-    mockSendEmail.mockResolvedValue(undefined);
+    mockSendEmailToQueue.mockResolvedValue(undefined);
 
     await forgotPassword(req, res, mockNext);
 
@@ -124,5 +121,13 @@ describe("Auth Controller - Forgot Password", () => {
         success: true,
       }),
     );
+
+    expect(mockSendEmailToQueue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "test@gmail.com",
+        subject: "Password Reset Request",
+      }),
+    );
+    expect(prisma.passwordResetToken.delete).not.toHaveBeenCalled();
   });
 });
