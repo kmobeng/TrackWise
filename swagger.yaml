@@ -410,6 +410,11 @@ paths:
       tags:
         - Expenses
       summary: Auto-categorize expense
+      description: |
+        Uses Groq to extract the amount, description, date, and category from a
+        free-form description. Returns a null amount when one cannot be
+        determined. 422 is returned when the AI response cannot be parsed, 502
+        when the AI service fails, and 504 when the request times out.
       requestBody:
         required: true
         content:
@@ -427,6 +432,12 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "504":
+          $ref: "#/components/responses/GatewayTimeout"
   /expenses/summary:
     get:
       tags:
@@ -837,6 +848,24 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+    UnprocessableEntity:
+      description: Unprocessable entity
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    BadGateway:
+      description: Upstream service error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    GatewayTimeout:
+      description: Upstream service timeout
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
     SuccessResponse:
       type: object
@@ -1083,6 +1112,7 @@ components:
               properties:
                 amount:
                   type: number
+                  nullable: true
                 description:
                   type: string
                 date:

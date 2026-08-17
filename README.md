@@ -164,7 +164,7 @@ See .env.example for the full list and defaults. Current variables used by the a
 - REFRESH_JWT_COOKIE_EXPIRES_IN: Refresh token cookie TTL in days
 - GOOGLE_CLIENT_ID: Google OAuth client ID
 - GOOGLE_CLIENT_SECRET: Google OAuth client secret
-- GROQ_API_KEY: Groq API key for AI summaries
+- GROQ_API_KEY: Groq API key for AI summaries and auto-categorization
 - RESEND_API_KEY: Resend API key for production email delivery
 - RESEND_EMAIL_FROM: From address for production emails (must use a Resend-verified domain)
 - EMAIL_FROM: From address for local development email (localhost SMTP)
@@ -174,5 +174,6 @@ See .env.example for the full list and defaults. Current variables used by the a
 - JWTs are stored in httpOnly cookies.
 - Protected routes require a verified email and a set password.
 - AI summaries are only available for completed months.
+- Auto-categorization and AI summaries use Groq (`openai/gpt-oss-20b`); auto-categorize requests time out after 30 seconds and return 502/504 on AI service failures.
 - Default categories are cached and seeded from prisma/seed.ts.
 - Email delivery uses the Resend API in production and a local SMTP server (localhost:1025) in development; see src/utils/email.util.ts.
