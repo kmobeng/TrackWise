@@ -6,6 +6,20 @@ import { toCedis } from "../utils/convertAmount.util";
 import { createError } from "../utils/error.util";
 import { stringify } from "csv-stringify/sync";
 
+const invalidateMonthlySummaryCache = async (
+  userId: string,
+  month: number,
+  year: number,
+) => {
+  const nextMonth = month === 12 ? 1 : month + 1;
+  const nextYear = month === 12 ? year + 1 : year;
+
+  await RedisClient.del(
+    `expense:monthly-summary:${userId}:${year}:${month}`,
+    `expense:monthly-summary:${userId}:${nextYear}:${nextMonth}`,
+  );
+};
+
 export const createExpenseService = async (
   amount: number,
   description: string | undefined,
@@ -23,6 +37,13 @@ export const createExpenseService = async (
         userId,
       },
     });
+
+    await invalidateMonthlySummaryCache(
+      userId,
+      expense.date.getUTCMonth() + 1,
+      expense.date.getUTCFullYear(),
+    );
+
     return expense;
   } catch (error) {
     throw error;
@@ -155,6 +176,17 @@ export const updateExpenseService = async (
       },
     });
 
+    await invalidateMonthlySummaryCache(
+      userId,
+      expense.date.getUTCMonth() + 1,
+      expense.date.getUTCFullYear(),
+    );
+    await invalidateMonthlySummaryCache(
+      userId,
+      updatedExpense.date.getUTCMonth() + 1,
+      updatedExpense.date.getUTCFullYear(),
+    );
+
     return updatedExpense;
   } catch (error) {
     throw error;
@@ -181,6 +213,12 @@ export const deleteExpenseService = async (
     await prisma.expense.delete({
       where: { id: expenseId, userId },
     });
+
+    await invalidateMonthlySummaryCache(
+      userId,
+      expense.date.getUTCMonth() + 1,
+      expense.date.getUTCFullYear(),
+    );
 
     return expense;
   } catch (error) {

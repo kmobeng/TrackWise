@@ -53,7 +53,7 @@ passport.use(
               where: { id: existingEmail.id },
               data: { googleId: profile.id },
             });
-            done(null, existingEmail, { authAction: "login" });
+            return done(null, existingEmail, { authAction: "login" });
           }
 
           const password = crypto.randomBytes(32).toString("hex");
