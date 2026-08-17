@@ -4,18 +4,28 @@ import { requestEmailVerificationService } from "./auth.service";
 import { createError } from "../utils/error.util";
 import { sendEmailToQueue } from "../queues/email.queue";
 
+const userProfileSelect = {
+  id: true,
+  googleId: true,
+  name: true,
+  email: true,
+  role: true,
+  provider: true,
+  needToChangePassword: true,
+  isEmailVerified: true,
+  pendingEmail: true,
+  passwordChangedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 export const getMeService = async (userId: string) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
         id: userId,
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-      },
+      select: userProfileSelect,
     });
     return user;
   } catch (error) {
@@ -36,12 +46,7 @@ export const updateMeService = async (
       data: {
         ...(name && { name }),
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-      },
+      select: userProfileSelect,
     });
     return updatedUser;
   } catch (error) {

@@ -895,14 +895,38 @@ components:
       properties:
         id:
           type: string
+        googleId:
+          type: string
+          nullable: true
         name:
           type: string
           maxLength: 255
         email:
           type: string
           format: email
+        role:
+          type: string
+          enum: [USER, ADMIN]
+        provider:
+          type: string
+        needToChangePassword:
+          type: boolean
         isEmailVerified:
           type: boolean
+        pendingEmail:
+          type: string
+          format: email
+          nullable: true
+        passwordChangedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
       required: [id, name, email]
     UserResponse:
       allOf:
