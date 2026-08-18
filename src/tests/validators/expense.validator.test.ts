@@ -24,6 +24,6 @@ describe("createExpenseSchema.date", () => {
   it("rejects future calendar days", () => {
     const result = createExpenseSchema.safeParse({ amount: 10, date: daysFromToday(1) });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0].message).toBe("Date cannot be in the future");
+    expect(result.error?.issues[0]?.message).toBe("Date cannot be in the future");
   });
 });
