@@ -1,6 +1,8 @@
 import IORedis from "ioredis";
 import { Queue } from "bullmq";
 import logger from "../config/winston.config";
+import sendEmail from "../utils/email.util";
+import { QUEUE_ENABLED, REDIS_ENABLED } from "../config/features.config";
 
 export type EmailJobPayload = {
   email: string;
@@ -25,6 +27,12 @@ const getQueue = () => {
 };
 
 export const sendEmailToQueue = async (payload: EmailJobPayload) => {
+  if (!QUEUE_ENABLED || !REDIS_ENABLED) {
+    await sendEmail(payload);
+    logger.info(`Email sent directly to ${payload.email}`);
+    return;
+  }
+
   try {
     await getQueue().add("sendEmail", payload, {
       attempts: 3,

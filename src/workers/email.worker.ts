@@ -3,10 +3,16 @@ import { Worker } from "bullmq";
 import sendEmail from "../utils/email.util";
 import logger from "../config/winston.config";
 import { EmailJobPayload } from "../queues/email.queue";
+import { QUEUE_ENABLED, REDIS_ENABLED } from "../config/features.config";
 
 let emailWorker: Worker<EmailJobPayload> | null = null;
 
 export const startEmailWorker = () => {
+  if (!QUEUE_ENABLED || !REDIS_ENABLED) {
+    logger.info("Queue disabled: email worker not started");
+    return null;
+  }
+
   if (emailWorker) {
     return emailWorker;
   }
