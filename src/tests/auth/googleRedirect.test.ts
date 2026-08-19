@@ -35,6 +35,7 @@ const mockNext = jest.fn() as jest.MockedFunction<NextFunction>;
 const mockgenerateAccessToken = utils.generateAccessToken as jest.Mock;
 const mockGenerateRefreshToken = utils.generateRefreshToken as jest.Mock;
 const mocksendRefreshToken = utils.sendRefreshToken as jest.Mock;
+const mockRefreshTokenExpiry = utils.refreshTokenExpiry as jest.Mock;
 const mockCreateRefreshToken = prisma.refreshToken.create as jest.Mock;
 
 const CLIENT_URL = "https://trackwise-gh.vercel.app";
@@ -57,6 +58,9 @@ describe("Auth Controller - Google Redirect", () => {
 
     const res = mockResponse();
     mockgenerateAccessToken.mockReturnValue(undefined);
+    mockRefreshTokenExpiry.mockReturnValue(
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    );
     mockGenerateRefreshToken.mockReturnValue({
       refreshToken: "refresh-token",
       hashedRefreshToken: "hashed-refresh-token",
@@ -116,6 +120,9 @@ describe("Auth Controller - Google Redirect", () => {
     );
     const res = mockResponse();
     mockgenerateAccessToken.mockReturnValue(undefined);
+    mockRefreshTokenExpiry.mockReturnValue(
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    );
     mockGenerateRefreshToken.mockReturnValue({
       refreshToken: "refresh-token",
       hashedRefreshToken: "hashed-refresh-token",
