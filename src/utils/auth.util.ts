@@ -21,12 +21,15 @@ const setAccessTokenCookieOptions = () => {
   return cookieOptions;
 };
 
+export const refreshTokenExpiry = () =>
+  new Date(
+    Date.now() +
+      Number(process.env.REFRESH_JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000,
+  );
+
 export const setRefreshTokenCookieOptions = () => {
   let RefreshCookieOptions: any = {
-    expires: new Date(
-      Date.now() +
-        Number(process.env.REFRESH_JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000,
-    ),
+    expires: refreshTokenExpiry(),
     // secure: true,
     httpOnly: true,
     // sameSite: "strict",

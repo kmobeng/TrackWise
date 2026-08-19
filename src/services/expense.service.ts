@@ -85,12 +85,20 @@ export const getExpensesService = async ({
   }
 
   // build sorting
-  let orderBy: Prisma.ExpenseOrderByWithRelationInput;
+  let orderBy: Prisma.ExpenseOrderByWithRelationInput[];
 
   if (sortBy === "category") {
-    orderBy = { category: { name: sortOrder } };
+    orderBy = [
+      { category: { name: sortOrder } },
+      { createdAt: sortOrder },
+      { id: sortOrder },
+    ];
   } else {
-    orderBy = { [sortBy]: sortOrder };
+    orderBy = [
+      { [sortBy]: sortOrder },
+      { createdAt: sortOrder },
+      { id: sortOrder },
+    ];
   }
 
   // pagination

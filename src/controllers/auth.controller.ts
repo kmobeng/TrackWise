@@ -21,6 +21,7 @@ import {
   generateRefreshToken,
   generateAccessToken,
   sendRefreshToken,
+  refreshTokenExpiry,
 } from "../utils/auth.util";
 import crypto from "crypto";
 import { maskEmail } from "../utils/email.util";
@@ -28,11 +29,6 @@ import { sendEmailToQueue } from "../queues/email.queue";
 import { User } from "../generated/prisma/client";
 import { JWTPayload } from "../middlewares/auth.middleware";
 import { RedisClient } from "../config/redis.config";
-
-const expiresAt = new Date(
-  Date.now() +
-    Number(process.env.REFRESH_JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000,
-);
 
 export const signUp = async (
   req: Request,
@@ -77,7 +73,7 @@ export const signUp = async (
       data: {
         token: hashedRefreshToken,
         userId: newUser.id,
-        expiresAt,
+        expiresAt: refreshTokenExpiry(),
       },
     });
 
@@ -130,7 +126,7 @@ export const login = async (
       data: {
         token: hashedRefreshToken,
         userId: user.id,
-        expiresAt,
+        expiresAt: refreshTokenExpiry(),
       },
     });
 
@@ -158,7 +154,7 @@ export const refreshToken = async (
       .update(refreshToken)
       .digest("hex");
 
-    await refreshTokenService(hashedRefreshToken, req, res, expiresAt);
+    await refreshTokenService(hashedRefreshToken, req, res, refreshTokenExpiry());
 
     res.status(200).json({ success: true });
   } catch (error) {
@@ -335,7 +331,7 @@ export const googleRedirect = async (
       data: {
         token: hashedRefreshToken,
         userId: user.id,
-        expiresAt,
+        expiresAt: refreshTokenExpiry(),
       },
     });
 
