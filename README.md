@@ -2,6 +2,12 @@
 
 TrackWise is a Node.js + TypeScript backend for expense tracking. It provides authentication, budgeting, expense management, AI-assisted summaries, exports, and caching. The API uses PostgreSQL via Prisma and Redis for caching and token/session helpers.
 
+## Links
+
+- Live API: https://trackwise-ek9a.onrender.com/
+- Swagger Docs: https://trackwise-ek9a.onrender.com/api/v1/docs
+- Frontend Repo: https://github.com/kmobeng/TrackWise-Frontend.git
+
 ## Features
 
 - Auth with JWT cookies and refresh tokens
@@ -75,7 +81,7 @@ npm run dev
 
 The server will start on http://localhost:5000 by default.
 
-Swagger UI is available at http://localhost:5000/api/v1/docs using the spec at swagger.yaml.
+Swagger UI is available at http://localhost:5000/api/v1/docs locally, or https://trackwise-ek9a.onrender.com/api/v1/docs in production, using the spec at swagger.yaml.
 
 ## Scripts
 
@@ -93,7 +99,7 @@ Swagger UI is available at http://localhost:5000/api/v1/docs using the spec at s
 
 Base path: /api/v1
 
-Swagger UI: http://localhost:5000/api/v1/docs (spec: swagger.yaml)
+Swagger UI: http://localhost:5000/api/v1/docs (local) | https://trackwise-ek9a.onrender.com/api/v1/docs (live) (spec: swagger.yaml)
 
 ### Auth
 
